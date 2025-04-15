@@ -52,33 +52,7 @@ try {
 }
 // --- End HTTPS/HTTP Server Configuration ---
 
-// --- Server Start Logic ---
-let port;
-if (process.env.NODE_ENV === 'production') {
-  port = process.env.PORT;
-  if (!port) {
-    throw new Error('No PORT environment variable set in production!');
-  }
-} else {
-  port = process.env.PORT || 5001; // fallback for local development
-}
 
-if (process.env.NODE_ENV === 'production') {
-  // In production, let DigitalOcean/App Platform handle HTTPS
-  app.listen(port, () => {
-    console.log(`HTTP server running on port ${port} (production mode, HTTPS handled by platform)`);
-  });
-} else if (httpsOptions) {
-  // In development, use local HTTPS certs
-  https.createServer(httpsOptions, app).listen(port, () => {
-    console.log(`HTTPS server running on port ${port} (development mode)`);
-  });
-} else {
-  // Fallback to HTTP for local dev if no certs found
-  app.listen(port, () => {
-    console.log(`HTTP server running on port ${port} (development fallback)`);
-  });
-}
 // --- End Server Start Logic ---
 
 // Middleware (runs first)
