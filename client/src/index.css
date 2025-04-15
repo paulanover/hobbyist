@@ -1,0 +1,34 @@
+/* Remove most global styles, rely on MUI's CssBaseline and ThemeProvider */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Let theme handle background */
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Remove any flexbox or grid styles applied directly to body or #root */
+/* Example: Remove lines like these if they exist */
+/*
+body {
+  display: flex;
+  min-height: 100vh;
+}
+#root {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+*/
+
+a {
+    text-decoration: none;
+    color: inherit;
+}

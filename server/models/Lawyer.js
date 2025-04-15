@@ -1,0 +1,82 @@
+const mongoose = require('mongoose');
+
+// Define allowed ranks
+const lawyerRanks = ['Partner', 'Junior Partner', 'Senior Associate', 'Associate'];
+const lawyerStatuses = ['Active', 'Inactive']; // Define statuses
+
+const lawyerSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Lawyer name is required'],
+    trim: true,
+  },
+  address: {
+    type: String,
+    trim: true,
+  },
+  initials: {
+    type: String,
+    required: [true, 'Lawyer initials are required'],
+    trim: true,
+    uppercase: true,
+    maxlength: [5, 'Initials cannot be more than 5 characters'], // Added constraint
+  },
+  email: {
+    type: String,
+    required: [true, 'Lawyer email is required'],
+    unique: true,
+    match: [/.+\@.+\..+/, 'Please fill a valid email address'], // Basic email validation
+    trim: true,
+    lowercase: true,
+  },
+  rank: { // Add rank field
+    type: String,
+    required: [true, 'Lawyer rank is required'],
+    enum: {
+        values: lawyerRanks,
+        message: 'Rank must be one of: Partner, Junior Partner, Senior Associate, Associate',
+    },
+    trim: true,
+  },
+  status: { // Add status field
+    type: String,
+    required: true,
+    enum: {
+        values: lawyerStatuses,
+        message: 'Status must be either Active or Inactive',
+    },
+    default: 'Active', // Default to Active
+  },
+  mattersAssigned: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Matter', // Reference to the Matter model (we'll create this next)
+  }],
+  lastUpdatedBy: { // Add this field
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  lastChangeDescription: { // Add this field
+    type: String,
+    trim: true,
+  },
+  // Add timestamps for creation and updates
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+// Middleware to update the updatedAt field on save
+lawyerSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+const Lawyer = mongoose.model('Lawyer', lawyerSchema);
+
+// Export ranks and statuses
+module.exports = { Lawyer, lawyerRanks, lawyerStatuses };

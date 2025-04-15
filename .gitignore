@@ -1,0 +1,33 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.env
+.env.*
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Build output
+client/dist/
+server/dist/
+
+# OS
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Misc
+coverage/
+/vercel
+/.vercel
+/.netlify

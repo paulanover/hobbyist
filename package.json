@@ -1,0 +1,10 @@
+{
+  "name": "law-office-system-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root for law office system project",
+  "workspaces": [
+    "server",
+    "client"
+  ]
+}

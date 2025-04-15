@@ -1,0 +1,32 @@
+import React, { useEffect } from 'react'; // Make sure useEffect is imported
+// ... other imports (Router, Routes, Route, etc.)
+
+function App() {
+  // Add this useEffect hook
+  useEffect(() => {
+    console.log(">>> App Component Mounted! <<<");
+  }, []);
+
+  return (
+    // Your existing Router setup likely goes here
+    // <Router>
+    //   <Header /> {/* Example */}
+    //   <main>
+    //     <Routes>
+    //       {/* Your <Route> definitions */}
+    //     </Routes>
+    //   </main>
+    //   <Footer /> {/* Example */}
+    // </Router>
+
+    // Or just a simple test message if Router is complex:
+    <div>
+      <h1>App Component Render Test</h1>
+      <p>If you see this in the browser, App.jsx is rendering.</p>
+      <p>Check the browser console for the 'App Component Mounted!' message.</p>
+      {/* Add your actual app structure back after testing */}
+    </div>
+  );
+}
+
+export default App;
