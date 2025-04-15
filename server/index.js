@@ -53,7 +53,16 @@ try {
 // --- End HTTPS/HTTP Server Configuration ---
 
 // --- Server Start Logic ---
-const port = process.env.PORT || 8080;
+let port;
+if (process.env.NODE_ENV === 'production') {
+  port = process.env.PORT;
+  if (!port) {
+    throw new Error('No PORT environment variable set in production!');
+  }
+} else {
+  port = process.env.PORT || 5001; // fallback for local development
+}
+
 if (process.env.NODE_ENV === 'production') {
   // In production, let DigitalOcean/App Platform handle HTTPS
   app.listen(port, () => {
