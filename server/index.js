@@ -31,7 +31,7 @@ console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
 // Initialize express app
 const app = express();
 
-// --- HTTPS Configuration ---
+// --- HTTPS/HTTP Server Configuration ---
 const certPath = path.resolve(__dirname, '../localhost+2.pem'); // Path relative to index.js
 const keyPath = path.resolve(__dirname, '../localhost+2-key.pem'); // Path relative to index.js
 
@@ -42,15 +42,35 @@ try {
       key: fs.readFileSync(keyPath),
       cert: fs.readFileSync(certPath),
     };
-    console.log('HTTPS certificates found and loaded.');
+    console.log('HTTPS certificates found and loaded (for local development only).');
   } else {
-    console.warn('HTTPS certificates not found at project root. Server will attempt to run in HTTP mode.');
+    console.warn('HTTPS certificates not found at project root. Will use HTTP for local development.');
   }
 } catch (err) {
   console.error('Error reading HTTPS certificates:', err);
-  console.warn('Server will attempt to run in HTTP mode.');
+  console.warn('Will use HTTP for local development.');
 }
-// --- End HTTPS Configuration ---
+// --- End HTTPS/HTTP Server Configuration ---
+
+// --- Server Start Logic ---
+const port = process.env.PORT || 8080;
+if (process.env.NODE_ENV === 'production') {
+  // In production, let DigitalOcean/App Platform handle HTTPS
+  app.listen(port, () => {
+    console.log(`HTTP server running on port ${port} (production mode, HTTPS handled by platform)`);
+  });
+} else if (httpsOptions) {
+  // In development, use local HTTPS certs
+  https.createServer(httpsOptions, app).listen(port, () => {
+    console.log(`HTTPS server running on port ${port} (development mode)`);
+  });
+} else {
+  // Fallback to HTTP for local dev if no certs found
+  app.listen(port, () => {
+    console.log(`HTTP server running on port ${port} (development fallback)`);
+  });
+}
+// --- End Server Start Logic ---
 
 // Middleware (runs first)
 console.log('Setting up middleware...');
