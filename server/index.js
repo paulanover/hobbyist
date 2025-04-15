@@ -147,21 +147,35 @@ app.use(notFound);
 // General error handler (runs if any route handler calls next(error) or if notFound runs)
 app.use(errorHandler);
 
-// Start server - Use HTTPS if options are available
-const PORT = process.env.PORT || 5001;
+// --- Server Start Logic ---
+let port;
+if (process.env.NODE_ENV === 'production') {
+  port = process.env.PORT;
+  if (!port) {
+    throw new Error('No PORT environment variable set in production!');
+  }
+} else {
+  port = process.env.PORT || 5001; // fallback for local development
+}
 
-let server; // Define server variable
-
-if (httpsOptions) {
-  server = https.createServer(httpsOptions, app); // Assign to server
-  server.listen(PORT, () => {
-    console.log(`HTTPS Server running securely on port ${PORT}`);
+let server;
+if (process.env.NODE_ENV === 'production') {
+  // In production, let DigitalOcean/App Platform handle HTTPS
+  server = app.listen(port, () => {
+    console.log(`HTTP server running on port ${port} (production mode, HTTPS handled by platform)`);
+  });
+} else if (httpsOptions) {
+  // In development, use local HTTPS certs
+  server = require('https').createServer(httpsOptions, app).listen(port, () => {
+    console.log(`HTTPS server running on port ${port} (development mode)`);
   });
 } else {
-  server = app.listen(PORT, () => { // Assign to server
-    console.log(`HTTP Server running (certs not found) on port ${PORT}`);
+  // Fallback to HTTP for local dev if no certs found
+  server = app.listen(port, () => {
+    console.log(`HTTP server running on port ${port} (development fallback)`);
   });
 }
+// --- End Server Start Logic ---
 
 // Connect to MongoDB
 console.log('Attempting to connect to MongoDB...');
