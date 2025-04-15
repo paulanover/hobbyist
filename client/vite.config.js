@@ -25,6 +25,7 @@ if (!httpsOptions) {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/hobbyist-client/',
   plugins: [react()],
   server: {
     // Only configure HTTPS if certificates were found
