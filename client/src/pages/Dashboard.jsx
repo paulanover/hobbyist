@@ -22,7 +22,22 @@ function Dashboard() {
   // Summary stats
   const totalMatters = mattersByCategory.reduce((sum, c) => sum + c.count, 0);
   const totalLawyers = Object.values(lawyerWorkload).reduce((sum, arr) => sum + arr.length, 0);
-  const avgMattersPerLawyer = totalLawyers > 0 ? (totalMatters / totalLawyers).toFixed(1) : 0;
+  // Helper to calculate median from an array
+  function median(arr) {
+    if (!arr.length) return 0;
+    const sorted = [...arr].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 !== 0
+      ? sorted[mid]
+      : ((sorted[mid - 1] + sorted[mid]) / 2).toFixed(1);
+  }
+  // Collect all lawyer matter counts for median calculation
+  const allCounts = Object.values(lawyerWorkload).flat().map(lawyer => lawyer.activeMatterCount);
+  const medianMattersPerLawyer = median(allCounts);
+  const seniorCounts = (lawyerWorkload['Senior Associate'] || []).map(lawyer => lawyer.activeMatterCount);
+  const medianSenior = median(seniorCounts);
+  const associateCounts = (lawyerWorkload['Associate'] || []).map(lawyer => lawyer.activeMatterCount);
+  const medianAssociate = median(associateCounts);
 
   useEffect(() => {
     async function fetchData() {
@@ -64,8 +79,16 @@ function Dashboard() {
           <div style={{ fontSize: 32, fontWeight: 700, color: accent }}>{totalLawyers}</div>
         </div>
         <div style={{ flex: 1, background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 10, padding: 20, textAlign: 'center' }}>
-          <div style={{ fontSize: 16, color: faded }}>Avg. Matters per Lawyer</div>
-          <div style={{ fontSize: 32, fontWeight: 700, color: accent }}>{avgMattersPerLawyer}</div>
+          <div style={{ fontSize: 16, color: faded }}>Median Matters per Lawyer</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: accent }}>{medianMattersPerLawyer}</div>
+        </div>
+        <div style={{ flex: 1, background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 10, padding: 20, textAlign: 'center' }}>
+          <div style={{ fontSize: 16, color: faded }}>Median (Senior Associates)</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: accent }}>{medianSenior}</div>
+        </div>
+        <div style={{ flex: 1, background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 10, padding: 20, textAlign: 'center' }}>
+          <div style={{ fontSize: 16, color: faded }}>Median (Associates)</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: accent }}>{medianAssociate}</div>
         </div>
       </div>
 
