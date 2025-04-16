@@ -7,7 +7,7 @@ import App from './App.jsx';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
+  <BrowserRouter basename="/hobbyist-client">
     <ThemeProviderWrapper>
       <AuthProvider>
         <App />
