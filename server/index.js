@@ -15,6 +15,7 @@ const matterRoutes = require('./routes/matterRoutes'); // Import matter routes
 const clientRoutes = require('./routes/clientRoutes');
 const userRoutes = require('./routes/userRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -117,6 +118,7 @@ app.use('/api/lawyers', lawyerRoutes);
 app.use('/api/matters', matterRoutes); // Mount the matter routes
 app.use('/api/clients', clientRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 console.log('API routes registered.');
 
 // 404 handler (runs ONLY if no routes above matched)

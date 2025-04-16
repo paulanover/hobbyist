@@ -1,4 +1,4 @@
-const Matter = require('../models/Matter.js');
+const { Matter } = require('../models/Matter.js');
 const { Lawyer } = require('../models/Lawyer.js');
 const { Client } = require('../models/Client.js');
 const User = require('../models/User.js');

@@ -55,9 +55,17 @@ const lawyerSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
-  lastChangeDescription: { // Add this field
-    type: String,
-    trim: true,
+  isDeleted: {
+    type: Boolean,
+    default: false,
+    index: true // Add index for faster querying of non-deleted lawyers
+  },
+  deletedAt: {
+    type: Date
+  },
+  deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User' // Reference the User model
   },
   // Add timestamps for creation and updates
   createdAt: {

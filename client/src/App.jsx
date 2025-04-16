@@ -21,6 +21,7 @@ import UserListPage from './pages/UserListPage';
 import AddUserPage from './pages/AddUserPage';
 import EditUserPage from './pages/EditUserPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import Dashboard from './pages/Dashboard';
 import AdminRoute from './components/AdminRoute';
 
 function App() {
@@ -35,7 +36,7 @@ function App() {
 
           {/* Protected Routes (Logged In Users) */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/lawyers" element={<LawyerListPage />} />
             <Route path="/lawyers/:id" element={<LawyerDetailPage />} />
             <Route path="/matters" element={<MatterListPage />} />

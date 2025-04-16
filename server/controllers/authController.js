@@ -5,15 +5,15 @@ const asyncHandler = require('../middleware/asyncHandler.js');
 
 // Helper function to set the token cookie
 const setTokenCookie = (res, token) => {
-  const isProduction = process.env.NODE_ENV === 'production'; // Check NODE_ENV
+  const isProduction = process.env.NODE_ENV === 'production';
   const options = {
-    httpOnly: true, // Prevent client-side JS access
-    secure: isProduction, // Use the result here
-    sameSite: 'lax', // Changed from 'strict' to 'lax' for better dev compatibility
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days (matches JWT expiry)
-    path: '/', // Explicitly set path to root
+    httpOnly: true,
+    secure: isProduction, // Secure cookies only in production (DigitalOcean)
+    sameSite: isProduction ? 'none' : 'lax', // 'none' for production, 'lax' for local dev
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+    path: '/',
   };
-  console.log(`[setTokenCookie] Setting cookie. NODE_ENV='${process.env.NODE_ENV}', Secure flag set to: ${options.secure}`); // Log the actual value
+  console.log(`[setTokenCookie] Setting cookie. NODE_ENV='${process.env.NODE_ENV}', Secure flag set to: ${options.secure}, SameSite: ${options.sameSite}`);
   res.cookie('jwt', token, options);
 };
 

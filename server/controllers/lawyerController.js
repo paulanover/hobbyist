@@ -123,8 +123,11 @@ const deleteLawyer = asyncHandler(async (req, res) => {
 
   if (lawyer) {
     // Optional: Add logic here - e.g., prevent deletion if assigned to active matters?
-    await Lawyer.deleteOne({ _id: lawyer._id });
-    res.status(200).json({ message: 'Lawyer profile removed' });
+    lawyer.isDeleted = true;
+    lawyer.deletedAt = new Date();
+    lawyer.deletedBy = req.user._id;
+    await lawyer.save();
+    res.status(200).json({ message: 'Lawyer marked as deleted', deletedBy: req.user._id, deletedAt: lawyer.deletedAt });
   } else {
     res.status(404);
     throw new Error('Lawyer not found');

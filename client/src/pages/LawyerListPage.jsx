@@ -18,13 +18,47 @@ import {
   IconButton, // Import IconButton
   Tooltip,    // Import Tooltip
   Chip,       // Import Chip for status display
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit'; // Import Edit icon
+import DeleteIcon from '@mui/icons-material/Delete'; // Import Delete icon
 
 function LawyerListPage() {
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [lawyerToDelete, setLawyerToDelete] = useState(null);
+  const [confirmDeleteInput, setConfirmDeleteInput] = useState("");
+  // --- Delete dialog logic ---
+  const handleDelete = (lawyer) => {
+    setLawyerToDelete(lawyer);
+    setOpenDeleteDialog(true);
+    setConfirmDeleteInput('');
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await axiosInstance.delete(`/lawyers/${lawyerToDelete._id}`);
+      setLawyers(lawyers.filter((l) => l._id !== lawyerToDelete._id));
+      setOpenDeleteDialog(false);
+      setLawyerToDelete(null);
+    } catch (err) {
+      setError('Failed to delete lawyer.');
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setOpenDeleteDialog(false);
+    setLawyerToDelete(null);
+    setConfirmDeleteInput('');
+  };
+
 
   useEffect(() => {
     const fetchLawyers = async () => {
@@ -33,8 +67,10 @@ function LawyerListPage() {
       try {
         console.log('Fetching lawyers...'); // Add log
         const { data } = await axiosInstance.get('/lawyers'); // Use relative path
-        console.log('Lawyers fetched:', data); // Add log
-        setLawyers(data);
+        // Filter out soft-deleted lawyers
+        const activeLawyers = Array.isArray(data) ? data.filter(l => !l.isDeleted) : [];
+        setLawyers(activeLawyers);
+        console.log('Lawyers fetched:', activeLawyers); // Add log
       } catch (err) {
         const message =
           err.response && err.response.data && err.response.data.message
@@ -83,10 +119,21 @@ function LawyerListPage() {
       ) : error ? (
         <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>
       ) : (
-        <TableContainer component={Paper}>
-          <Table sx={{ minWidth: 1100 }} aria-label="lawyers table">
+        <TableContainer component={Paper} sx={{
+          width: '100%',
+          overflowX: 'auto',
+          '@media (max-width:600px)': {
+            boxShadow: 'none',
+            minWidth: 0,
+          }
+        }}>
+          <Table sx={{ minWidth: 600 }} aria-label="lawyers table">
             <TableHead>
-              <TableRow>
+              <TableRow sx={{
+                '@media (max-width:600px)': {
+                  '& th': { fontSize: '0.85rem', padding: '6px 4px' }
+                }
+              }}>
                 <TableCell>Name</TableCell>
                 <TableCell>Initials</TableCell>
                 <TableCell>Email</TableCell>
@@ -111,6 +158,9 @@ function LawyerListPage() {
                           opacity: 0.65, // Make inactive rows slightly faded
                           backgroundColor: 'transparent', // Ensure background is transparent
                         }),
+                        '@media (max-width:600px)': {
+                          '& td': { fontSize: '0.80rem', padding: '6px 4px' }
+                        }
                     }}
                   >
                     <TableCell component="th" scope="row">
@@ -124,28 +174,48 @@ function LawyerListPage() {
                       </Typography>
                     </TableCell>
                     <TableCell>{lawyer.initials}</TableCell>
-                    <TableCell>{lawyer.email}</TableCell>
+                    <TableCell sx={{ wordBreak: 'break-all' }}>{lawyer.email}</TableCell>
                     <TableCell>{lawyer.rank}</TableCell>
                     <TableCell>
                       <Chip
                         label={lawyer.status}
                         color={getStatusColor(lawyer.status)}
                         size="small"
+                        sx={{
+                          '@media (max-width:600px)': { fontSize: '0.7rem', height: 20 }
+                        }}
                       />
                     </TableCell>
-                    <TableCell>{new Date(lawyer.updatedAt).toLocaleString()}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(lawyer.updatedAt).toLocaleString()}</TableCell>
                     <TableCell>{lawyer.lastUpdatedBy?.name || 'N/A'}</TableCell>
                     <TableCell>{lawyer.lastChangeDescription || 'N/A'}</TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Edit Lawyer">
-                        <IconButton
-                          component={RouterLink}
-                          to={`/lawyers/edit/${lawyer._id}`}
-                          size="small"
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
+                    <TableCell align="right" sx={{ minWidth: 70 }}>
+                      <Box sx={{
+                        display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
+                        gap: 1,
+                        alignItems: { xs: 'flex-end', sm: 'center' },
+                        justifyContent: 'flex-end'
+                      }}>
+                        <Tooltip title="Edit Lawyer">
+                          <IconButton
+                            component={RouterLink}
+                            to={`/lawyers/edit/${lawyer._id}`}
+                            size="small"
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete Lawyer">
+                          <IconButton
+                            onClick={() => handleDelete(lawyer)}
+                            size="small"
+                            color="error"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))
@@ -154,6 +224,30 @@ function LawyerListPage() {
           </Table>
         </TableContainer>
       )}
+      <Dialog open={openDeleteDialog} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete Lawyer</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete {lawyerToDelete?.name}? This action cannot be undone.<br/>
+            <b>Type <code>delete</code> to confirm.</b>
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Type 'delete' to confirm"
+            fullWidth
+            value={confirmDeleteInput}
+            onChange={e => setConfirmDeleteInput(e.target.value)}
+            disabled={loading}
+            error={confirmDeleteInput && confirmDeleteInput !== 'delete'}
+            helperText={confirmDeleteInput && confirmDeleteInput !== 'delete' ? "You must type 'delete' to enable deletion." : ''}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="primary">Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" disabled={confirmDeleteInput !== 'delete' || loading}>Delete</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
