@@ -6,5 +6,8 @@
   "workspaces": [
     "server",
     "client"
-  ]
+  ],
+  "devDependencies": {
+    "vite-plugin-pwa": "^1.0.0"
+  }
 }

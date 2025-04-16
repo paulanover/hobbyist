@@ -6,6 +6,7 @@ import { Box, CircularProgress } from '@mui/material'; // For loading indicator
 const ProtectedRoute = () => {
   const authState = useAuth() || {};
   const { userInfo, loading } = authState; // Get loading state
+  const location = window.location.pathname;
 
   console.log('[ProtectedRoute] Rendering - Loading:', loading, 'UserInfo:', !!userInfo);
 
@@ -25,7 +26,13 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // If loading is finished and user info exists, render the child route
+  // Lawyer role: only allow access to /timesheet
+  if (userInfo.role === 'lawyer' && location !== '/timesheet') {
+    console.log('[ProtectedRoute] Lawyer tried to access', location, 'redirecting to /timesheet');
+    return <Navigate to="/timesheet" replace />;
+  }
+
+  // Non-lawyer: allow access to all protected routes
   console.log('[ProtectedRoute] Authenticated, rendering Outlet');
   return <Outlet />; // Outlet renders the nested child route component
 };

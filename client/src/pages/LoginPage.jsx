@@ -28,8 +28,14 @@ function LoginPage() {
     // Log userInfo changes
     console.log('[LoginPage] useEffect triggered. userInfo:', userInfo);
     if (userInfo) {
-      console.log('[LoginPage] userInfo found, navigating to /dashboard'); // Log navigation attempt
-      navigate('/dashboard', { replace: true }); // Or wherever logged-in users should go
+      // Redirect lawyers to /timesheet, everyone else to /dashboard
+      if (userInfo.role === 'lawyer') {
+        console.log('[LoginPage] userInfo found, role is lawyer, navigating to /timesheet');
+        navigate('/timesheet', { replace: true });
+      } else {
+        console.log('[LoginPage] userInfo found, role is', userInfo.role, ', navigating to /dashboard');
+        navigate('/dashboard', { replace: true });
+      }
     }
   }, [userInfo, navigate]);
 

@@ -59,13 +59,15 @@ function AddUserPage() {
     setLoading(true);
 
     try {
-      await axiosInstance.post('/users', {
+      const payload = {
         name,
         email,
         password,
         role,
         lawyerProfile: role === 'lawyer' ? lawyerProfile?._id : undefined, // Send ID or undefined
-      });
+      };
+      console.log('[AddUserPage] Submitting payload:', payload);
+      await axiosInstance.post('/users', payload);
       navigate('/users');
     } catch (err) {
       const message = err.response?.data?.message || err.message;
@@ -109,8 +111,10 @@ function AddUserPage() {
                 <TextField
                   {...params}
                   margin="normal"
-                  label="Link to Lawyer Profile (Optional)"
-                  placeholder={availableLawyers.length > 0 ? 'Select lawyer...' : 'Loading lawyers...'}
+                  required
+                  label="Link to Lawyer Profile (Required)"
+                  placeholder={availableLawyers.length > 0 ? 'Select lawyer...' : 'No available lawyers. Create a profile first.'}
+                  helperText={availableLawyers.length === 0 ? 'No available lawyer profiles. Please create a lawyer profile before adding a user with the lawyer role.' : 'Required: Select a lawyer profile to link to this user.'}
                   InputProps={{
                     ...params.InputProps,
                     endAdornment: (

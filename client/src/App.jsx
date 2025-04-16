@@ -23,6 +23,7 @@ import EditUserPage from './pages/EditUserPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import AdminRoute from './components/AdminRoute';
+import LawyerTimesheet from './pages/LawyerTimesheet';
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
           {/* Protected Routes (Logged In Users) */}
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/timesheet" element={<LawyerTimesheet />} />
             <Route path="/lawyers" element={<LawyerListPage />} />
             <Route path="/lawyers/:id" element={<LawyerDetailPage />} />
             <Route path="/matters" element={<MatterListPage />} />

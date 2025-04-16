@@ -90,7 +90,7 @@ const getUserById = asyncHandler(async (req, res) => {
 // @route   POST /api/users
 // @access  Private/Admin
 const createUser = asyncHandler(async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, lawyerProfile } = req.body;
 
   const userExists = await User.findOne({ email });
 
@@ -99,12 +99,19 @@ const createUser = asyncHandler(async (req, res) => {
     throw new Error('User already exists');
   }
 
-  const user = await User.create({
+  const userData = {
     name,
     email,
     password, // Password will be hashed by the pre-save hook in User model
     role,
-  });
+  };
+
+  // Only add lawyerProfile if role is lawyer and lawyerProfile is provided
+  if (role === 'lawyer' && lawyerProfile) {
+    userData.lawyerProfile = lawyerProfile;
+  }
+
+  const user = await User.create(userData);
 
   if (user) {
     const userResponse = await User.findById(user._id).select('-password');
