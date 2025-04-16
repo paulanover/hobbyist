@@ -248,8 +248,11 @@ const deleteUser = asyncHandler(async (req, res) => {
   if (user) {
     // Optional: Prevent deleting the last admin? Or self-deletion?
     // if (user.role === 'admin' && ...) { ... }
-    await User.deleteOne({ _id: user._id });
-    res.status(200).json({ message: 'User removed' });
+    user.isDeleted = true;
+    user.deletedAt = new Date();
+    user.deletedBy = req.user._id;
+    await user.save();
+    res.status(200).json({ message: 'User marked as deleted', deletedBy: req.user._id, deletedAt: user.deletedAt });
   } else {
     res.status(404);
     throw new Error('User not found');

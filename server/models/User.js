@@ -42,13 +42,17 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+  isDeleted: {
+    type: Boolean,
+    default: false,
+    index: true // Add index for faster querying of non-deleted users
   },
-  updatedAt: { // Add updatedAt field
-    type: Date,
-    default: Date.now,
+  deletedAt: {
+    type: Date
+  },
+  deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User' // Reference the User model
   },
 });
 

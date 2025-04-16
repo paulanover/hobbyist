@@ -14,6 +14,7 @@ function UserListPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [confirmDeleteInput, setConfirmDeleteInput] = useState('');
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
 
@@ -24,8 +25,10 @@ function UserListPage() {
       console.log("Fetching users...");
       try {
         const { data } = await axiosInstance.get('/users');
-        setUsers(data);
-        console.log("Users fetched:", data);
+        // Filter out soft-deleted users
+        const activeUsers = Array.isArray(data) ? data.filter(u => !u.isDeleted) : [];
+        setUsers(activeUsers);
+        console.log("Users fetched:", activeUsers);
       } catch (err) {
         const message = err.response?.data?.message || err.message;
         setError(`Failed to fetch users: ${message}`);
@@ -54,6 +57,7 @@ function UserListPage() {
   const handleDelete = (user) => {
     setUserToDelete(user);
     setOpenDeleteDialog(true);
+    setConfirmDeleteInput('');
   };
 
   const handleDeleteConfirm = async () => {
@@ -71,6 +75,7 @@ function UserListPage() {
   const handleDeleteCancel = () => {
     setOpenDeleteDialog(false);
     setUserToDelete(null);
+    setConfirmDeleteInput('');
   };
 
   return (
@@ -142,12 +147,24 @@ function UserListPage() {
         <DialogTitle>Delete User</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete {userToDelete?.name}? This action cannot be undone.
+            Are you sure you want to delete {userToDelete?.name}? This action cannot be undone.<br/>
+            <b>Type <code>delete</code> to confirm.</b>
           </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Type 'delete' to confirm"
+            fullWidth
+            value={confirmDeleteInput}
+            onChange={e => setConfirmDeleteInput(e.target.value)}
+            disabled={loading}
+            error={confirmDeleteInput && confirmDeleteInput !== 'delete'}
+            helperText={confirmDeleteInput && confirmDeleteInput !== 'delete' ? "You must type 'delete' to enable deletion." : ''}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteCancel} color="primary">Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error">Delete</Button>
+          <Button onClick={handleDeleteConfirm} color="error" disabled={confirmDeleteInput !== 'delete' || loading}>Delete</Button>
         </DialogActions>
       </Dialog>
     </Container>

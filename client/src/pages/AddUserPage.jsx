@@ -52,10 +52,8 @@ function AddUserPage() {
       return;
     }
     if (role === 'lawyer' && !lawyerProfile) {
-        // Make linking optional or mandatory based on requirements
-        // setError('A Lawyer Profile must be selected for the lawyer role.');
-        // return;
-        console.warn("Creating lawyer user without linking profile immediately.");
+      setError('A Lawyer Profile must be selected for the lawyer role.');
+      return;
     }
 
     setLoading(true);

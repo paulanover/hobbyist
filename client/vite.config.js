@@ -24,8 +24,8 @@ if (!httpsOptions) {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  base: '/hobbyist-client/',
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/hobbyist-client/' : '/',
   plugins: [react()],
   server: {
     // Only configure HTTPS if certificates were found
@@ -34,4 +34,4 @@ export default defineConfig({
     // Optional: Proxy API requests if needed
     // proxy: { ... }
   },
-});
+}));

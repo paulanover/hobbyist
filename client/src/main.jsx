@@ -6,8 +6,12 @@ import AuthProvider from './context/AuthContext';
 import App from './App.jsx';
 import './index.css';
 
+// Dynamically set the base path for the router
+const isProd = import.meta.env.MODE === 'production';
+const routerBase = isProd ? '/hobbyist-client' : '';
+
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <BrowserRouter basename="/hobbyist-client">
+  <BrowserRouter basename={routerBase}>
     <ThemeProviderWrapper>
       <AuthProvider>
         <App />

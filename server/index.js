@@ -19,11 +19,15 @@ const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 // Load environment variables
 dotenv.config();
 console.log('Environment loaded, PORT:', process.env.PORT);
-const allowedOrigins = process.env.CLIENT_URL
+// Determine allowed origins for CORS
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = isProduction && process.env.CLIENT_URL
   ? process.env.CLIENT_URL.split(',').map(origin => origin.trim())
   : [
       'https://localhost:5173',
-      'https://localhost:5174'
+      'http://localhost:5173',
+      'https://localhost:5174',
+      'http://localhost:5174'
     ];
 console.log('Allowed origins for CORS:', allowedOrigins);
 console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
