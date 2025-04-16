@@ -1,7 +1,7 @@
-const { Client } = require('../models/Client.js'); // Destructure if exporting object
+const { Client } = require('../models/Client.js'); // Destructured import for Client model
 const User = require('../models/User.js'); // Import User model
-const { Lawyer } = require('../models/Lawyer.js'); // Import Lawyer model
-const { Matter } = require('../models/Matter.js'); // Import Matter model correctly
+const Lawyer = require('../models/Lawyer.js'); // Direct import
+const { Matter } = require('../models/Matter.js'); // Destructured import for Matter model
 const asyncHandler = require('../middleware/asyncHandler.js');
 
 // @desc    Create a new client
@@ -32,6 +32,12 @@ const createClient = asyncHandler(async (req, res) => {
     }
   }
 
+  // Convert lawyerOwners to ObjectId array if provided
+  let lawyerOwnersObjectIds = [];
+  if (lawyerOwners && lawyerOwners.length > 0) {
+    lawyerOwnersObjectIds = lawyerOwners.map(id => mongoose.Types.ObjectId(id));
+  }
+
   const client = new Client({
     name,
     isBusinessEntity: isBusinessEntity || false, // Ensure boolean
@@ -41,7 +47,7 @@ const createClient = asyncHandler(async (req, res) => {
     phone,
     address,
     vatStatus,
-    lawyerOwners: lawyerOwners || [], // Assign lawyer owners
+    lawyerOwners: lawyerOwnersObjectIds, // Assign as ObjectId array
   });
 
   const createdClient = await client.save();
@@ -192,6 +198,80 @@ const getClientWithMatters = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get clients for matters where the lawyer is on the team
+// @route   GET /api/clients/for-lawyer-matters?search=...
+// @access  Private
+const getClientsForLawyerMatters = asyncHandler(async (req, res) => {
+  const lawyerId = req.user._id;
+  const search = req.query.search || '';
+  // Find all matters where the lawyer is on the team
+  const matters = await Matter.find({ teamAssigned: lawyerId }).select('client');
+  const clientIds = matters.map(m => m.client.toString());
+  const uniqueClientIds = [...new Set(clientIds)];
+  if (uniqueClientIds.length === 0) return res.json([]);
+  const clientQuery = { _id: { $in: uniqueClientIds } };
+  if (search) {
+    clientQuery.name = { $regex: search, $options: 'i' };
+  }
+  const clients = await Client.find(clientQuery);
+  res.json(clients);
+});
+
+// @desc    Get clients where the lawyer is an owner or on a matter team
+// @route   GET /api/clients/for-lawyer-relevant?search=...
+// @access  Private
+const getClientsForLawyerRelevant = asyncHandler(async (req, res) => {
+  const lawyerId = req.user._id;
+  const search = req.query.search || '';
+  console.log('[RelevantClients] lawyerId:', lawyerId);
+
+  // 1. Clients where lawyer is an owner
+  const ownedClients = await Client.find({ lawyerOwners: lawyerId }).select('_id');
+  const ownedClientIds = ownedClients.map(c => c._id.toString());
+  console.log('[RelevantClients] ownedClientIds:', ownedClientIds);
+
+  // 2. Clients where lawyer is on a matter's teamAssigned
+  const matters = await Matter.find({ teamAssigned: lawyerId }).select('client');
+  const matterClientIds = matters.map(m => m.client.toString());
+  console.log('[RelevantClients] matterClientIds:', matterClientIds);
+
+  // Union of client IDs
+  const allClientIds = Array.from(new Set([...ownedClientIds, ...matterClientIds]));
+  console.log('[RelevantClients] allClientIds:', allClientIds);
+
+  if (allClientIds.length === 0) {
+    console.log('[RelevantClients] No relevant clients found.');
+    return res.json([]);
+  }
+  const clientQuery = { _id: { $in: allClientIds } };
+  if (search) {
+    clientQuery.name = { $regex: search, $options: 'i' };
+  }
+  const clients = await Client.find(clientQuery);
+  console.log('[RelevantClients] clients:', clients.map(c => c.name));
+  res.json(clients);
+});
+
+// TEMPORARY: Debug endpoint to inspect lawyerOwners field
+const debugLawyerOwners = asyncHandler(async (req, res) => {
+  const clients = await Client.find({}).select('name lawyerOwners');
+  res.json(clients);
+});
+
+// @desc    Get matters for a specific client where the logged-in lawyer is on the team
+// @route   GET /api/clients/:id/matters/for-lawyer
+// @access  Private (lawyer must be on team)
+const getClientMattersForLawyer = asyncHandler(async (req, res) => {
+  const clientId = req.params.id;
+  const lawyerId = req.user._id;
+  // Find matters for this client where this lawyer is on the team
+  const matters = await Matter.find({ client: clientId, teamAssigned: lawyerId })
+    .populate('teamAssigned', 'name initials')
+    .select('title docketNumber status dateCreated teamAssigned')
+    .sort('-createdAt');
+  res.status(200).json(matters);
+});
+
 module.exports = {
   createClient,
   getClients,
@@ -199,4 +279,8 @@ module.exports = {
   updateClient,
   deleteClient,
   getClientWithMatters, // Export the new function
+  getClientsForLawyerMatters,
+  getClientsForLawyerRelevant,
+  debugLawyerOwners, // Export debug endpoint
+  getClientMattersForLawyer,
 };

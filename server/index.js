@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes');
 const lawyerRoutes = require('./routes/lawyerRoutes');
 const matterRoutes = require('./routes/matterRoutes'); // Import matter routes
 const clientRoutes = require('./routes/clientRoutes');
+const timeEntryRoutes = require('./routes/timeEntryRoutes');
 const userRoutes = require('./routes/userRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -116,7 +117,8 @@ console.log('Registering API routes...');
 app.use('/api/auth', authRoutes);
 app.use('/api/lawyers', lawyerRoutes);
 app.use('/api/matters', matterRoutes); // Mount the matter routes
-app.use('/api/clients', clientRoutes);
+app.use('/api/clients', clientRoutes); // Use client routes
+app.use('/api/time-entries', timeEntryRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 console.log('API routes registered.');

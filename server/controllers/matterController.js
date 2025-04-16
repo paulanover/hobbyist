@@ -1,6 +1,6 @@
-const { Matter } = require('../models/Matter.js');
-const { Lawyer } = require('../models/Lawyer.js');
-const { Client } = require('../models/Client.js');
+const Matter = require('../models/Matter.js');
+const Lawyer = require('../models/Lawyer.js');
+const Client = require('../models/Client.js');
 const User = require('../models/User.js');
 const asyncHandler = require('../middleware/asyncHandler.js');
 const YearlyStats = require('../models/YearlyStats.js'); // <-- Uncomment this line
@@ -9,13 +9,25 @@ const YearlyStats = require('../models/YearlyStats.js'); // <-- Uncomment this l
 // @route   POST /api/matters
 // @access  Private (Admin)
 const createMatter = asyncHandler(async (req, res) => {
+  // Ensure client owners are in teamAssigned
+  let { client, teamAssigned = [] } = req.body;
+  const clientDoc = await Client.findById(client);
+  if (!clientDoc) {
+    res.status(400);
+    throw new Error('Client not found');
+  }
+  // Merge owners into teamAssigned
+  teamAssigned = Array.from(new Set([
+    ...teamAssigned.map(String),
+    ...clientDoc.lawyerOwners.map(String)
+  ])).map(id => require('mongoose').Types.ObjectId(id));
+  req.body.teamAssigned = teamAssigned;
+
   const {
     title,
     docketNumber, // Expecting CATEGORY.SIX_CHARS format
     category,     // Expecting single digit
-    client,       // Expecting client ID
     status,
-    teamAssigned, // Expecting array of lawyer IDs
     relevantData  // Expecting description/notes
   } = req.body;
   const createdBy = req.user._id; // Get user ID from protect middleware
@@ -58,9 +70,9 @@ const createMatter = asyncHandler(async (req, res) => {
   }
 
   // Validate Team Assigned lawyers exist (if provided)
-  if (teamAssigned && Array.isArray(teamAssigned) && teamAssigned.length > 0) {
-    const lawyersExist = await Lawyer.find({ '_id': { $in: teamAssigned } });
-    if (lawyersExist.length !== teamAssigned.length) {
+  if (req.body.teamAssigned && Array.isArray(req.body.teamAssigned) && req.body.teamAssigned.length > 0) {
+    const lawyersExist = await Lawyer.find({ '_id': { $in: req.body.teamAssigned } });
+    if (lawyersExist.length !== req.body.teamAssigned.length) {
       res.status(400);
       throw new Error('One or more assigned lawyers are invalid');
     }
@@ -76,7 +88,7 @@ const createMatter = asyncHandler(async (req, res) => {
       category,
       client, // Store client ID
       status,
-      teamAssigned: teamAssigned || [], // Default to empty array if not provided
+      teamAssigned: req.body.teamAssigned || [], // Default to empty array if not provided
       relevantData, // Store description/notes
       createdBy,
       lastUpdatedBy: createdBy, // Set initial lastUpdatedBy
@@ -167,48 +179,63 @@ const getMatterById = asyncHandler(async (req, res) => {
 // @route   PUT /api/matters/:id
 // @access  Private
 const updateMatter = asyncHandler(async (req, res) => {
-  const matter = await Matter.findOne({ _id: req.params.id, isDeleted: { $ne: true } });
+  // Ensure client owners are in teamAssigned
+  const matter = await Matter.findById(req.params.id);
+  if (!matter) {
+    res.status(404);
+    throw new Error('Matter not found');
+  }
+  const clientDoc = await Client.findById(matter.client);
+  if (!clientDoc) {
+    res.status(400);
+    throw new Error('Client not found');
+  }
+  let teamAssigned = req.body.teamAssigned || matter.teamAssigned || [];
+  // Merge owners into teamAssigned
+  teamAssigned = Array.from(new Set([
+    ...teamAssigned.map(String),
+    ...clientDoc.lawyerOwners.map(String)
+  ])).map(id => require('mongoose').Types.ObjectId(id));
+  req.body.teamAssigned = teamAssigned;
 
-  if (matter) {
-    // Get potential new category and docket number from body
-    const newCategory = req.body.category ?? matter.category;
-    const newDocketNumber = req.body.docketNumber; // The full CATEGORY.SIX_CHARS string
+  const newCategory = req.body.category ?? matter.category;
+  const newDocketNumber = req.body.docketNumber || matter.docketNumber; // The full CATEGORY.SIX_CHARS string
 
-    // Validate new category format if provided
-    if (req.body.category && !/^[0-9]$/.test(newCategory)) {
+  // Validate new category format if provided
+  if (req.body.category && !/^[0-9]$/.test(newCategory)) {
+    res.status(400);
+    throw new Error('Category must be a single digit (0-9)');
+  }
+
+  // Handle docketNumber update
+  if (newDocketNumber && newDocketNumber !== matter.docketNumber) {
+    // Validate combined format
+    const docketRegex = /^[0-9]\.[a-zA-Z0-9]{6}$/;
+    if (!docketRegex.test(newDocketNumber)) {
       res.status(400);
-      throw new Error('Category must be a single digit (0-9)');
+      throw new Error('Invalid Docket Number format. Must be CATEGORY.SIX_CHARS (e.g., 1.AB12CD)');
     }
-
-    // Handle docketNumber update
-    if (newDocketNumber && newDocketNumber !== matter.docketNumber) {
-      // Validate combined format
-      const docketRegex = /^[0-9]\.[a-zA-Z0-9]{6}$/;
-      if (!docketRegex.test(newDocketNumber)) {
-        res.status(400);
-        throw new Error('Invalid Docket Number format. Must be CATEGORY.SIX_CHARS (e.g., 1.AB12CD)');
-      }
-      // Validate category match
-      if (newDocketNumber.split('.')[0] !== newCategory) {
-        res.status(400);
-        throw new Error('Docket Number prefix must match the selected Category.');
-      }
-      // Check uniqueness
-      const docketExists = await Matter.findOne({ docketNumber: newDocketNumber, _id: { $ne: matter._id } });
-      if (docketExists) {
-        res.status(400);
-        throw new Error('Docket Number already exists');
-      }
-      matter.docketNumber = newDocketNumber; // Update if valid and different
-    } else if (req.body.category && newCategory !== matter.category) {
-      if (matter.docketNumber.split('.')[0] !== newCategory) {
-        res.status(400);
-        throw new Error('Category change requires updating the Docket Number prefix accordingly.');
-      }
+    // Validate category match
+    if (newDocketNumber.split('.')[0] !== newCategory) {
+      res.status(400);
+      throw new Error('Docket Number prefix must match the selected Category.');
     }
+    // Check uniqueness
+    const docketExists = await Matter.findOne({ docketNumber: newDocketNumber, _id: { $ne: matter._id } });
+    if (docketExists) {
+      res.status(400);
+      throw new Error('Docket Number already exists');
+    }
+    matter.docketNumber = newDocketNumber; // Update if valid and different
+  } else if (req.body.category && newCategory !== matter.category) {
+    if (matter.docketNumber.split('.')[0] !== newCategory) {
+      res.status(400);
+      throw new Error('Category change requires updating the Docket Number prefix accordingly.');
+    }
+  }
 
-    // Apply other potential updates
-    matter.title = req.body.title ?? matter.title;
+  // Apply other potential updates
+  matter.title = req.body.title ?? matter.title;
     matter.category = newCategory; // Update category
     matter.status = req.body.status ?? matter.status;
     matter.relevantData = req.body.relevantData ?? matter.relevantData;
@@ -241,6 +268,7 @@ const updateMatter = asyncHandler(async (req, res) => {
     }
 
     const changedFields = [];
+  if (matter) {
     if (matter.isModified('title')) changedFields.push('title');
     if (matter.isModified('docketNumber')) changedFields.push('docket number'); // Track docket change
     if (matter.isModified('category')) changedFields.push('category');

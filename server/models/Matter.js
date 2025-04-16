@@ -102,4 +102,5 @@ matterSchema.pre('save', function(next) {
 
 const Matter = mongoose.model('Matter', matterSchema);
 
-module.exports = { Matter };
+module.exports = Matter;
+module.exports.Matter = Matter;

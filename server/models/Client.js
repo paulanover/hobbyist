@@ -74,4 +74,6 @@ clientSchema.pre('save', function(next) {
 
 const Client = mongoose.model('Client', clientSchema);
 
-module.exports = { Client, vatStatuses }; // Export statuses for frontend use
+module.exports = Client;
+module.exports.Client = Client;
+module.exports.vatStatuses = vatStatuses; // Export statuses for frontend use

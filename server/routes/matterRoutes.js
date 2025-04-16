@@ -13,6 +13,7 @@ const {
   getBasicDashboardStats
 } = require('../controllers/matterController.js');
 const { protect, admin } = require('../middleware/authMiddleware.js'); // Import auth middleware
+const { lawyerAssignedOrOwner } = require('../middleware/rbacMiddleware.js');
 
 const router = express.Router();
 console.log('Matter routes file loaded (Restored).');
@@ -30,14 +31,14 @@ router.get('/dashboard/basic', protect, (req, res, next) => {
 });
 
 // Add Route for Deleted Matters
-router.get('/deleted', protect, admin, getDeletedMatters); // Requires admin login
+router.get('/deleted', protect, getDeletedMatters); // Requires login only
 
 router.route('/')
   .post(protect, admin, createMatter) // Requires admin login
   .get(protect, getMatters); // Requires login
 
 router.route('/:id')
-  .get(protect, getMatterById) // Requires login
+  .get(protect, lawyerAssignedOrOwner, getMatterById) // Allow owners OR assigned lawyers to view
   .put(protect, admin, updateMatter) // Requires admin login
   .delete(protect, admin, deleteMatter); // Requires admin login
 

@@ -1,6 +1,6 @@
-const { Lawyer } = require('../models/Lawyer.js');
+const Lawyer = require('../models/Lawyer.js');
 const User = require('../models/User.js'); // Import User model
-const { Matter } = require('../models/Matter.js'); // Import Matter model correctly
+const Matter = require('../models/Matter.js'); // Direct import
 const asyncHandler = require('../middleware/asyncHandler.js');
 
 // @desc    Create a new lawyer profile

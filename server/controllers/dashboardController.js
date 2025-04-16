@@ -1,6 +1,6 @@
 // server/controllers/dashboardController.js
-const { Matter } = require('../models/Matter');
-const { Lawyer } = require('../models/Lawyer');
+const Matter = require('../models/Matter');
+const Lawyer = require('../models/Lawyer');
 
 // GET /api/dashboard/matters-by-category
 // Returns: [{ category, count }]

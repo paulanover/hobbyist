@@ -86,5 +86,7 @@ lawyerSchema.pre('save', function(next) {
 
 const Lawyer = mongoose.model('Lawyer', lawyerSchema);
 
-// Export ranks and statuses
-module.exports = { Lawyer, lawyerRanks, lawyerStatuses };
+module.exports = Lawyer;
+module.exports.Lawyer = Lawyer;
+module.exports.lawyerRanks = lawyerRanks;
+module.exports.lawyerStatuses = lawyerStatuses;
