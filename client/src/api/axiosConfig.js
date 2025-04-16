@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Get the backend URL from environment variables or default to HTTPS localhost:5001
 // Vite uses import.meta.env.VITE_*
-const API_URL = import.meta.env.VITE_API_URL || 'https://localhost:5001/api'; // Remove process.env
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:5001/api'; // Remove process.env
 
 console.log('API Base URL:', API_URL); // Log the URL being used
 
