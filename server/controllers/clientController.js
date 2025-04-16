@@ -1,7 +1,7 @@
 const { Client } = require('../models/Client.js'); // Destructure if exporting object
 const User = require('../models/User.js'); // Import User model
 const { Lawyer } = require('../models/Lawyer.js'); // Import Lawyer model
-const Matter = require('../models/Matter.js'); // Import Matter model
+const { Matter } = require('../models/Matter.js'); // Import Matter model correctly
 const asyncHandler = require('../middleware/asyncHandler.js');
 
 // @desc    Create a new client

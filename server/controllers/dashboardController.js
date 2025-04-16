@@ -27,7 +27,7 @@ const getLawyerWorkload = async (req, res) => {
     });
   });
   // Prepare grouped/sorted data
-  const ranks = ['Partner', 'Senior Associate', 'Associate'];
+  const ranks = ['Partner', 'Junior Partner', 'Senior Associate', 'Associate'];
   const grouped = {};
   ranks.forEach(rank => grouped[rank] = []);
   lawyers.forEach(lawyer => {

@@ -34,6 +34,8 @@ function Dashboard() {
   // Collect all lawyer matter counts for median calculation
   const allCounts = Object.values(lawyerWorkload).flat().map(lawyer => lawyer.activeMatterCount);
   const medianMattersPerLawyer = median(allCounts);
+  const juniorCounts = (lawyerWorkload['Junior Partner'] || []).map(lawyer => lawyer.activeMatterCount);
+  const medianJunior = median(juniorCounts);
   const seniorCounts = (lawyerWorkload['Senior Associate'] || []).map(lawyer => lawyer.activeMatterCount);
   const medianSenior = median(seniorCounts);
   const associateCounts = (lawyerWorkload['Associate'] || []).map(lawyer => lawyer.activeMatterCount);
@@ -83,6 +85,10 @@ function Dashboard() {
           <div style={{ fontSize: 32, fontWeight: 700, color: accent }}>{medianMattersPerLawyer}</div>
         </div>
         <div style={{ flex: 1, background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 10, padding: 20, textAlign: 'center' }}>
+          <div style={{ fontSize: 16, color: faded }}>Median (Junior Partners)</div>
+          <div style={{ fontSize: 32, fontWeight: 700, color: accent }}>{medianJunior}</div>
+        </div>
+        <div style={{ flex: 1, background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 10, padding: 20, textAlign: 'center' }}>
           <div style={{ fontSize: 16, color: faded }}>Median (Senior Associates)</div>
           <div style={{ fontSize: 32, fontWeight: 700, color: accent }}>{medianSenior}</div>
         </div>
@@ -108,7 +114,7 @@ function Dashboard() {
 
       <h2 style={{ marginTop: 48, color: text }}>Lawyer Workload (Active Matters)</h2>
       <div style={{ display: 'flex', gap: 24, justifyContent: 'space-between' }}>
-        {['Partner', 'Senior Associate', 'Associate'].map(rank => (
+        {['Partner', 'Junior Partner', 'Senior Associate', 'Associate'].map(rank => (
           <div key={rank} style={{ flex: 1, background: cardBg, border: `1px solid ${cardBorder}`, borderRadius: 10, padding: 16, minHeight: 240 }}>
             <h3 style={{ textAlign: 'center', color: faded }}>{rank}s</h3>
             <ul style={{ listStyle: 'none', padding: 0 }}>
