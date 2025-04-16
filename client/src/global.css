@@ -1,0 +1,139 @@
+/* Global dark theme for law firm admin system */
+:root {
+  --bg-main: #181C20;
+  --bg-card: #23272F;
+  --border-card: #2C313A;
+  --accent-blue: #4F8CFF;
+  --accent-teal: #38BDF8;
+  --accent-lavender: #A5B4FC;
+  --text-main: #E5EAF2;
+  --text-secondary: #A0AEC0;
+  --text-muted: #64748B;
+  --shadow-card: 0 2px 12px rgba(0,0,0,0.14);
+  --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.22);
+  --radius-card: 14px;
+  --font-main: 'Inter', 'Poppins', system-ui, sans-serif;
+}
+
+html, body {
+  background: var(--bg-main);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--accent-lavender);
+  font-family: var(--font-main);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+a:hover {
+  color: var(--accent-teal);
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  transition: box-shadow 0.2s, transform 0.2s;
+  border: 1px solid var(--border-card);
+}
+.card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: scale(1.02);
+}
+
+input, select, textarea, button {
+  background: #23283a;
+  color: var(--text-main);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  font-family: var(--font-main);
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  outline: none;
+  transition: border 0.2s;
+}
+input:focus, select:focus, textarea:focus, button:focus {
+  border-color: var(--accent-blue);
+}
+
+button {
+  background: var(--accent-blue);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 18px;
+  transition: background 0.2s;
+}
+button:hover {
+  background: var(--accent-teal);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #23272F;
+}
+::-webkit-scrollbar-thumb {
+  background: #2C313A;
+  border-radius: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+.table th, .table td {
+  padding: 12px 16px;
+  text-align: left;
+}
+.table th {
+  background: #23283a;
+  color: var(--accent-blue);
+}
+.table tr {
+  border-bottom: 1px solid var(--border-card);
+}
+.table tr:last-child {
+  border-bottom: none;
+}
+.table tr:hover {
+  background: #23283a;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+}
+.flex-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .flex-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .card {
+    padding: 16px;
+  }
+}
