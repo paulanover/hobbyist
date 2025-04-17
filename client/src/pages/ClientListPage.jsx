@@ -9,7 +9,11 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 // import DeleteIcon from '@mui/icons-material/Delete'; // Optional: Add later
 
+import { useAuth } from '../context/AuthContext';
+
 function ClientListPage() {
+  const authState = useAuth() || {};
+  const { userInfo } = authState;
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
