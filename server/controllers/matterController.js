@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Matter = require('../models/Matter.js');
 const Lawyer = require('../models/Lawyer.js');
 const Client = require('../models/Client.js');
@@ -20,7 +21,7 @@ const createMatter = asyncHandler(async (req, res) => {
   teamAssigned = Array.from(new Set([
     ...teamAssigned.map(String),
     ...clientDoc.lawyerOwners.map(String)
-  ])).map(id => require('mongoose').Types.ObjectId(id));
+  ])).map(id => new mongoose.Types.ObjectId(id));
   req.body.teamAssigned = teamAssigned;
 
   const {
@@ -195,7 +196,7 @@ const updateMatter = asyncHandler(async (req, res) => {
   teamAssigned = Array.from(new Set([
     ...teamAssigned.map(String),
     ...clientDoc.lawyerOwners.map(String)
-  ])).map(id => require('mongoose').Types.ObjectId(id));
+  ])).map(id => new mongoose.Types.ObjectId(id));
   req.body.teamAssigned = teamAssigned;
 
   const newCategory = req.body.category ?? matter.category;
