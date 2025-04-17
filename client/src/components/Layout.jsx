@@ -181,6 +181,9 @@ function Layout({ children }) {
         position="fixed"
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
+          '@media (max-width:600px)': {
+            minHeight: 56,
+          },
         }}
       >
         <Toolbar>
@@ -240,7 +243,7 @@ function Layout({ children }) {
           )}
         </Toolbar>
       </AppBar>
-      <Box sx={{ display: 'flex', flexGrow: 1, mt: '64px' }}>
+      <Box sx={{ display: 'flex', flexGrow: 1, mt: { xs: '56px', sm: '64px' } }}>
         {userInfo && (
           <Box
             component="nav"

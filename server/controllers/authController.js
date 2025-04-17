@@ -4,16 +4,18 @@ const generateToken = require('../utils/generateToken.js');
 const asyncHandler = require('../middleware/asyncHandler.js');
 
 // Helper function to set the token cookie
+// Helper function to set the JWT cookie with mobile compatibility
 const setTokenCookie = (res, token) => {
   const isProduction = process.env.NODE_ENV === 'production';
+  // Best practice: mobile browsers require SameSite=None and Secure=true for cross-origin cookies
   const options = {
     httpOnly: true,
-    secure: isProduction, // Secure cookies only in production (DigitalOcean)
+    secure: isProduction, // Secure cookies only in production (HTTPS)
     sameSite: isProduction ? 'none' : 'lax', // 'none' for production, 'lax' for local dev
     maxAge: 30 * 24 * 60 * 60 * 1000,
     path: '/',
   };
-  console.log(`[setTokenCookie] Setting cookie. NODE_ENV='${process.env.NODE_ENV}', Secure flag set to: ${options.secure}, SameSite: ${options.sameSite}`);
+  console.log(`[setTokenCookie] Setting cookie. NODE_ENV='${process.env.NODE_ENV}', Secure flag: ${options.secure}, SameSite: ${options.sameSite}`);
   res.cookie('jwt', token, options);
 };
 
@@ -130,16 +132,16 @@ const loginUser = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/logout
 // @access  Private (requires user to be logged in to logout)
 const logoutUser = asyncHandler(async (req, res) => {
-  const isProduction = process.env.NODE_ENV === 'production'; // Check NODE_ENV
-  console.log('[logoutUser] Clearing JWT cookie...');
+  const isProduction = process.env.NODE_ENV === 'production';
+  // Use the same settings as setTokenCookie for clearing
   res.cookie('jwt', '', {
     httpOnly: true,
-    secure: isProduction, // Use the result here
-    sameSite: 'lax', // Match the setting used when creating
+    secure: isProduction, // Secure cookies only in production
+    sameSite: isProduction ? 'none' : 'lax', // Match the setting used when creating
     expires: new Date(0), // Expire immediately
-    path: '/', // Match the setting used when creating
+    path: '/',
   });
-  console.log(`[logoutUser] Cleared cookie. Secure flag was: ${isProduction}`); // Log secure flag used
+  console.log(`[logoutUser] Cleared JWT cookie. NODE_ENV='${process.env.NODE_ENV}', Secure flag: ${isProduction}, SameSite: ${isProduction ? 'none' : 'lax'}`);
   res.status(200).json({ message: 'Logged out successfully' });
 });
 

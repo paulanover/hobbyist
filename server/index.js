@@ -82,6 +82,7 @@ app.use(helmet({
 app.use(morgan('dev'));
 
 // Configure CORS - Allow multiple origins
+// CORS: Allow credentials for explicit origins only (mobile/cross-origin best practice)
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -92,7 +93,7 @@ app.use(cors({
       return callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  credentials: true // Required for cookies/JWT on mobile
 }));
 
 app.use(express.json());
