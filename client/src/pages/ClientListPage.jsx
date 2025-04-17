@@ -44,9 +44,25 @@ function ClientListPage() {
         <Typography variant="h4" component="h1">
           Clients
         </Typography>
-        <Button variant="contained" component={RouterLink} to="/clients/add">
-          Add Client
-        </Button>
+        {(userInfo && (
+          (userInfo.role === 'lawyer' && (userInfo.lawyerProfile?.rank === 'Partner' || userInfo.lawyerProfile?.rank === 'Junior Partner')) ||
+          userInfo.role === 'admin' ||
+          userInfo.role === 'accountant'
+        )) && (
+          <Button variant="contained" component={RouterLink} to="/clients/add">
+            Add Client
+          </Button>
+        )}
+        {userInfo && userInfo.role === 'lawyer' && (!userInfo.lawyerProfile?.rank || (userInfo.lawyerProfile?.rank !== 'Partner' && userInfo.lawyerProfile?.rank !== 'Junior Partner')) && (
+          <Typography variant="body2" color="text.secondary">
+            Only Partners, Junior Partners, Admins, and Accounting can add clients.
+          </Typography>
+        )}
+        {userInfo && userInfo.role !== 'lawyer' && userInfo.role !== 'admin' && userInfo.role !== 'accountant' && (
+          <Typography variant="body2" color="text.secondary">
+            You do not have permission to add clients.
+          </Typography>
+        )}
       </Box>
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>

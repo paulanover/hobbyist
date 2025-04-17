@@ -128,10 +128,30 @@ const createMatter = asyncHandler(async (req, res) => {
 // @route   GET /api/matters
 // @access  Private
 const getMatters = asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit, 10) || 0; // Get limit from query, default 0 (no limit)
-  const sort = req.query.sort || '-createdAt'; // Get sort from query, default newest first
+  const limit = parseInt(req.query.limit, 10) || 0;
+  const sort = req.query.sort || '-createdAt';
+  let mattersQuery;
 
-  const mattersQuery = Matter.find({ isDeleted: { $ne: true } })
+  const role = req.user.role || 'lawyer';
+  if (role === 'admin' || role === 'accounting') {
+    mattersQuery = Matter.find({ isDeleted: { $ne: true } });
+  } else if (role === 'lawyer' && req.user.lawyerProfile) {
+    const lawyerId = req.user.lawyerProfile;
+    // Find all clients where the lawyer is an owner
+    const ownedClients = await Client.find({ lawyerOwners: lawyerId }).select('_id');
+    const ownedClientIds = ownedClients.map(c => c._id);
+    mattersQuery = Matter.find({
+      isDeleted: { $ne: true },
+      $or: [
+        { teamAssigned: lawyerId },
+        { client: { $in: ownedClientIds } }
+      ]
+    });
+  } else {
+    return res.status(403).json({ error: 'Not authorized to view matters' });
+  }
+
+  mattersQuery = mattersQuery
     .populate({
       path: 'client',
       select: 'name lawyerOwners',
@@ -142,13 +162,13 @@ const getMatters = asyncHandler(async (req, res) => {
     })
     .populate('teamAssigned', 'name initials')
     .populate('lastUpdatedBy', 'name')
-    .sort(sort); // Apply sorting
+    .sort(sort);
 
   if (limit > 0) {
-    mattersQuery.limit(limit); // Apply limit if specified
+    mattersQuery.limit(limit);
   }
 
-  const matters = await mattersQuery; // Execute the query
+  const matters = await mattersQuery;
   res.status(200).json(matters);
 });
 

@@ -3,7 +3,14 @@ import { Box, Typography, TextField, Button, Table, TableHead, TableRow, TableCe
 import axios from '../api/axiosConfig';
 
 const LawyerTimeSheetPage = () => {
-  const [filters, setFilters] = useState({ client: '', matter: '', lawyer: '', dateFrom: '', dateTo: '' });
+  // Default dates: start of current month to today (local time)
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const startOfMonth = `${yyyy}-${mm}-01`;
+  const today = `${yyyy}-${mm}-${dd}`;
+  const [filters, setFilters] = useState({ client: '', matter: '', lawyer: '', dateFrom: startOfMonth, dateTo: today });
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -67,6 +74,7 @@ const LawyerTimeSheetPage = () => {
               <TableCell>Matter Title</TableCell>
               <TableCell>Description</TableCell>
               <TableCell>Lawyer Initials</TableCell>
+              <TableCell>Team Members</TableCell>
               <TableCell>Time Spent (hrs)</TableCell>
               <TableCell>Date</TableCell>
             </TableRow>
@@ -82,6 +90,7 @@ const LawyerTimeSheetPage = () => {
                 <TableCell>{row.matterTitle}</TableCell>
                 <TableCell>{row.description}</TableCell>
                 <TableCell>{row.lawyerInitials}</TableCell>
+                <TableCell>{row.teamMembers}</TableCell>
                 <TableCell>{row.timeSpent}</TableCell>
                 <TableCell>{row.date ? new Date(row.date).toLocaleDateString() : ''}</TableCell>
               </TableRow>

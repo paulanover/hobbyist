@@ -1,4 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '../context/AuthContext';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 import axiosInstance from '../api/axiosConfig';
 // Import useNavigate and Link
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
@@ -97,6 +103,8 @@ function ClientDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate(); // Initialize useNavigate
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchClientDetails = async () => {
@@ -169,10 +177,25 @@ function ClientDetailPage() {
             <Chip label={clientDetails.isBusinessEntity ? 'Business Entity' : 'Individual'} size="small" sx={{ mr: 1 }} />
             <Chip label={clientDetails.vatStatus} size="small" variant="outlined" />
           </Box>
-          {/* SECURITY: Conditionally render the Edit button based on user permissions */}
-          {/* {canEditClient && ( */}
-            <Button component={RouterLink} to={`/clients/edit/${clientId}`} variant="outlined" size="small">Edit Client</Button>
-          {/* )} */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button component={RouterLink} to={`/clients/edit/${clientId}`} variant="outlined" size="small" disabled={isDeleting}>Edit Client</Button>
+            {/* Delete button only visible to allowed roles/ranks */}
+            {userInfo && (
+              (userInfo.role === 'admin' || userInfo.role === 'accountant' ||
+                (userInfo.role === 'lawyer' && ['Partner', 'Junior Partner'].includes(userInfo.lawyerProfile?.rank))) && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={() => setOpenConfirmDialog(true)}
+                  disabled={isDeleting}
+                  sx={{ ml: 1 }}
+                >
+                  {isDeleting ? <CircularProgress size={20} color="inherit" /> : 'Delete'}
+                </Button>
+              )
+            )}
+          </Box>
         </Box>
 
         <Grid container spacing={2}>
@@ -231,8 +254,55 @@ function ClientDetailPage() {
       <Button variant="outlined" onClick={() => navigate(-1)} sx={{ mt: 3 }}>
         Back
       </Button>
+
+      {/* Confirm Delete Dialog */}
+      <Dialog
+        open={openConfirmDialog}
+        onClose={() => setOpenConfirmDialog(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete the client "{clientDetails?.name}"? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenConfirmDialog(false)} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteClient} color="error" autoFocus disabled={isDeleting}>
+            {isDeleting ? <CircularProgress size={20} /> : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
+
+  // --- Delete Handler ---
+  function handleDeleteClient() {
+    if (!userInfo || !(
+      userInfo.role === 'admin' ||
+      userInfo.role === 'accountant' ||
+      (userInfo.role === 'lawyer' && ['Partner', 'Junior Partner'].includes(userInfo.lawyerProfile?.rank))
+    )) {
+      setError('You do not have permission to delete this client.');
+      return;
+    }
+    setOpenConfirmDialog(false);
+    setIsDeleting(true);
+    setError('');
+    axiosInstance.delete(`/clients/${clientId}`)
+      .then(() => {
+        navigate('/clients', { replace: true, state: { message: 'Client deleted successfully.' } });
+      })
+      .catch(err => {
+        const message = err.response?.data?.message || err.message;
+        setError(`Failed to delete client: ${message}`);
+        setIsDeleting(false);
+      });
+  }
 }
 
 export default ClientDetailPage;

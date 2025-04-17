@@ -3,25 +3,20 @@ const { partnerOrOwner, associateOrAssigned } = require('./rbacMiddleware');
 
 // This middleware allows access if EITHER partnerOrOwner OR associateOrAssigned passes
 const ownerOrAssigned = async (req, res, next) => {
-  let passed = false;
-  // Try partnerOrOwner
-  await partnerOrOwner(req, res, (err) => {
-    if (!err) {
-      passed = true;
-      next();
+  if (req.user && (req.user.role === 'admin' || req.user.role === 'accounting')) {
+    return next(); // Admin/Accounting always allowed
+  }
+  try {
+    await partnerOrOwner(req, res, () => {});
+    return next(); // If partnerOrOwner passes, allow
+  } catch (err1) {
+    try {
+      await associateOrAssigned(req, res, () => {});
+      return next(); // If associateOrAssigned passes, allow
+    } catch (err2) {
+      res.status(403);
+      next(new Error('Not authorized as owner or assigned lawyer'));
     }
-  });
-  if (passed) return;
-  // Try associateOrAssigned
-  await associateOrAssigned(req, res, (err) => {
-    if (!err) {
-      passed = true;
-      next();
-    }
-  });
-  if (!passed) {
-    res.status(403);
-    next(new Error('Not authorized as owner or assigned lawyer'));
   }
 };
 

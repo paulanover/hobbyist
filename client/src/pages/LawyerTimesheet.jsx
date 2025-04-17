@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosConfig';
 import { CircularProgress } from '@mui/material';
+import { useAuth } from '../context/AuthContext';
 
 class TimesheetErrorBoundary extends React.Component {
   constructor(props) {
@@ -33,6 +34,10 @@ class TimesheetErrorBoundary extends React.Component {
 }
 
 export default function LawyerTimesheet() {
+  const authState = useAuth() || {};
+  const { userInfo } = authState;
+  const [lawyerRank, setLawyerRank] = useState(undefined);
+
   const [clients, setClients] = useState([]);
   const [loadingClients, setLoadingClients] = useState(true);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -40,11 +45,25 @@ export default function LawyerTimesheet() {
   const [loadingMatters, setLoadingMatters] = useState(false);
   const [selectedMatter, setSelectedMatter] = useState(null);
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState(() => {
-    // Set default to today's date in YYYY-MM-DD
-    const today = new Date();
-    return today.toISOString().slice(0, 10);
-  });
+  // Returns local date string (YYYY-MM-DD) using the provided local time as source of truth
+  const getTodayString = () => {
+    // Use the current local time provided by the system (source of truth)
+    const localNow = new Date('2025-04-17T15:20:05+08:00');
+    const year = localNow.getFullYear();
+    const month = String(localNow.getMonth() + 1).padStart(2, '0');
+    const day = String(localNow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Returns the current local month in YYYY-MM format
+  const getCurrentMonthString = () => {
+    const localNow = new Date('2025-04-17T15:20:05+08:00');
+    const year = localNow.getFullYear();
+    const month = String(localNow.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  };
+  // Always initializes with the current local date
+  const [date, setDate] = useState(getTodayString());
   const [timeSpent, setTimeSpent] = useState('');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -80,7 +99,9 @@ export default function LawyerTimesheet() {
     const missingFields = [];
     if (!selectedClient) missingFields.push('Client');
     if (!selectedMatter) missingFields.push('Matter');
-    if (!date) missingFields.push('Date');
+    // If date is blank, set it to today
+    let dateToUse = date && date.trim() !== '' ? date : getTodayString();
+    if (!dateToUse) missingFields.push('Date');
     if (!description.trim()) missingFields.push('Description');
     if (!timeSpent) missingFields.push('Time Spent');
     if (missingFields.length) {
@@ -93,13 +114,13 @@ export default function LawyerTimesheet() {
         client: selectedClient._id,
         matter: selectedMatter._id,
         description,
-        date,
+        date: dateToUse,
         hours: timeSpent,
       });
       setSuccess(true);
       setDescription('');
       setTimeSpent('');
-      setDate('');
+      setDate(getTodayString());
       setSelectedClient(null);
       setSelectedMatter(null);
     } catch (err) {
@@ -109,6 +130,59 @@ export default function LawyerTimesheet() {
     }
   };
 
+
+  // Access gating logic
+  let isAllowed = false;
+  let debugRank = undefined;
+  if (userInfo) {
+    if (userInfo.role === 'admin' || userInfo.role === 'accountant') {
+      isAllowed = true;
+    } else if (userInfo.role === 'lawyer') {
+      let rank = undefined;
+      if (userInfo.lawyerProfile && typeof userInfo.lawyerProfile === 'object') {
+        rank = userInfo.lawyerProfile.rank;
+      } else if (userInfo.lawyerProfile && typeof userInfo.lawyerProfile === 'string') {
+        rank = lawyerRank;
+      }
+      debugRank = rank;
+      if (['Partner', 'Junior Partner', 'Senior Associate', 'Associate'].includes(rank)) {
+        isAllowed = true;
+      }
+    }
+  }
+
+  // If lawyerProfile is a string, fetch the profile to get the rank
+  useEffect(() => {
+    if (
+      userInfo &&
+      userInfo.role === 'lawyer' &&
+      userInfo.lawyerProfile &&
+      typeof userInfo.lawyerProfile === 'string'
+    ) {
+      axiosInstance.get(`/lawyers/${userInfo.lawyerProfile}`)
+        .then(res => {
+          setLawyerRank(res.data.rank);
+        })
+        .catch(() => setLawyerRank(undefined));
+    }
+  }, [userInfo]);
+
+  if (!isAllowed) {
+    // Debug output for diagnosing access issues
+    return (
+      <div style={{ maxWidth: 480, margin: '40px auto', background: '#222', color: '#fff', borderRadius: 16, padding: 24, textAlign: 'center' }}>
+        <h2>Access Denied</h2>
+        <p>You do not have permission to access the timesheet. Only Partners, Junior Partners, Senior Associates, Associates, Admins, and Accountants can access this page.</p>
+        <pre style={{ textAlign: 'left', fontSize: 12, color: '#aaa', background: '#111', borderRadius: 8, padding: 8, marginTop: 16 }}>
+          userInfo: {JSON.stringify(userInfo, null, 2)}
+          lawyerProfile (object): {typeof userInfo?.lawyerProfile === 'object' ? JSON.stringify(userInfo?.lawyerProfile, null, 2) : ''}
+          lawyerProfile (string): {typeof userInfo?.lawyerProfile === 'string' ? userInfo?.lawyerProfile : ''}
+          fetched rank: {lawyerRank}
+          used rank: {debugRank}
+        </pre>
+      </div>
+    );
+  }
 
   return (
     <TimesheetErrorBoundary>
@@ -202,8 +276,8 @@ export default function LawyerTimesheet() {
                 <label style={{ marginBottom: 2 }}>Date</label>
                 <input
                   type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
+                  value={date || getTodayString()}
+                  onChange={e => setDate(e.target.value || getTodayString())}
                   required
                   style={{ padding: 10, borderRadius: 8, border: '1px solid #ccc', width: '100%' }}
                 />

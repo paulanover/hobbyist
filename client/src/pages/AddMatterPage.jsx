@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   Container,
   Box,
@@ -19,6 +20,9 @@ import {
 const statuses = ['Active', 'Inactive', 'Closed'];
 
 function AddMatterPage() {
+  const authState = useAuth() || {};
+  const { userInfo } = authState;
+
   const [title, setTitle] = useState('');
   const [docketSuffix, setDocketSuffix] = useState(''); // State for the 6-char part
   const [category, setCategory] = useState('');
@@ -56,7 +60,8 @@ function AddMatterPage() {
     const fetchClients = async () => {
       setLoadingClients(true);
       try {
-        const { data } = await axiosInstance.get('/clients');
+        // Use the filtered endpoint so only relevant clients are shown
+        const { data } = await axiosInstance.get('/clients/for-lawyer-relevant');
         setAvailableClients(data);
       } catch (err) {
         console.error('Failed to fetch clients:', err);
@@ -122,6 +127,32 @@ function AddMatterPage() {
       setLoading(false);
     }
   };
+
+  // Access gating logic
+  let isAllowed = false;
+  if (userInfo) {
+    if (userInfo.role === 'admin' || userInfo.role === 'accountant') {
+      isAllowed = true;
+    } else if (userInfo.role === 'lawyer') {
+      const rank = userInfo.lawyerProfile?.rank;
+      if (['Partner', 'Junior Partner', 'Senior Associate', 'Associate'].includes(rank)) {
+        isAllowed = true;
+      }
+    }
+  }
+
+  if (!isAllowed) {
+    return (
+      <Container component="main" maxWidth="sm">
+        <Box sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography component="h1" variant="h5">Access Denied</Typography>
+          <Alert severity="error" sx={{ width: '100%', mt: 2 }}>
+            You do not have permission to add matters. Only Partners, Junior Partners, Senior Associates, Associates, Admins, and Accountants can access this page.
+          </Alert>
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container component="main" maxWidth="md">

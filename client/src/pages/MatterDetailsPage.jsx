@@ -25,8 +25,11 @@ import {
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance'; // Example icon for client
 import GavelIcon from '@mui/icons-material/Gavel'; // Example icon for lawyer
 import DeleteIcon from '@mui/icons-material/Delete'; // Import Delete icon
+import { useAuth } from '../context/AuthContext';
 
 function MatterDetailPage() {
+  const authState = useAuth() || {};
+  const { userInfo } = authState;
   const { id: matterId } = useParams();
   const navigate = useNavigate();
   const [matter, setMatter] = useState(null);
@@ -77,6 +80,15 @@ function MatterDetailPage() {
   };
 
   const handleDeleteMatter = async () => {
+    // Only allow if user is admin, accountant, Partner, or Junior Partner
+    if (!userInfo || !(
+      userInfo.role === 'admin' ||
+      userInfo.role === 'accountant' ||
+      (userInfo.role === 'lawyer' && ['Partner', 'Junior Partner'].includes(userInfo.lawyerProfile?.rank))
+    )) {
+      setError('You do not have permission to delete this matter.');
+      return;
+    }
     handleCloseConfirmDialog();
     setIsDeleting(true);
     setError('');
@@ -92,6 +104,7 @@ function MatterDetailPage() {
       setIsDeleting(false);
     }
   };
+
 
   if (loading) {
     return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
@@ -131,16 +144,23 @@ function MatterDetailPage() {
             >
               Edit Matter
             </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              size="small"
-              startIcon={<DeleteIcon />}
-              onClick={handleOpenConfirmDialog}
-              disabled={isDeleting}
-            >
-              {isDeleting ? <CircularProgress size={20} color="inherit" /> : 'Delete'}
-            </Button>
+            {/* Delete button only visible to allowed roles/ranks */}
+            {userInfo && (
+              (userInfo.role === 'admin' || userInfo.role === 'accountant' ||
+                (userInfo.role === 'lawyer' && ['Partner', 'Junior Partner'].includes(userInfo.lawyerProfile?.rank))) && (
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  startIcon={<DeleteIcon />}
+                  onClick={handleOpenConfirmDialog}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? <CircularProgress size={20} color="inherit" /> : 'Delete'}
+                </Button>
+              )
+            )}
+
           </Box>
         </Box>
 

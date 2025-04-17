@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'; // Add useEffect
 import axiosInstance from '../api/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   Container, Box, TextField, Button, Typography, Alert, CircularProgress,
   FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel, Checkbox, Divider,
@@ -11,6 +12,14 @@ import {
 const vatStatuses = ['VAT Registered', 'Non-VAT', 'VAT Exempt'];
 
 function AddClientPage() {
+  const authState = useAuth() || {};
+  const { userInfo } = authState;
+
+  const isAllowed = userInfo && (
+    (userInfo.role === 'lawyer' && (userInfo.lawyerProfile?.rank === 'Partner' || userInfo.lawyerProfile?.rank === 'Junior Partner')) ||
+    userInfo.role === 'admin' ||
+    userInfo.role === 'accountant'
+  );
   const [name, setName] = useState('');
   const [isBusinessEntity, setIsBusinessEntity] = useState(false);
   const [presidentName, setPresidentName] = useState('');
@@ -81,6 +90,19 @@ function AddClientPage() {
       setLoading(false);
     }
   };
+
+  if (!isAllowed) {
+    return (
+      <Container component="main" maxWidth="sm">
+        <Box sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography component="h1" variant="h5">Access Denied</Typography>
+          <Alert severity="error" sx={{ width: '100%', mt: 2 }}>
+            You do not have permission to add clients. Only Partners, Junior Partners, Admins, and Accounting can access this page.
+          </Alert>
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container component="main" maxWidth="sm">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../api/axiosConfig';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   Container, Box, TextField, Button, Typography, Alert, CircularProgress,
   FormControl, Chip, Autocomplete,
@@ -11,6 +12,10 @@ import {
 const statuses = ['Active', 'Inactive', 'Closed'];
 
 function EditMatterPage() {
+  const authState = useAuth() || {};
+  const { userInfo } = authState;
+  const [matterTeam, setMatterTeam] = useState([]); // For gating
+
   const { id: matterId } = useParams(); // Get matter ID from URL params
   const navigate = useNavigate();
 
@@ -53,6 +58,8 @@ function EditMatterPage() {
 
         setAvailableLawyers(fetchedLawyers);
         setAvailableClients(fetchedClients);
+        setMatterTeam(Array.isArray(fetchedMatter.teamAssigned) ? fetchedMatter.teamAssigned : []);
+
 
         // Set matter details state
         setTitle(fetchedMatter.title);
@@ -188,6 +195,35 @@ function EditMatterPage() {
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
         <CircularProgress />
       </Box>
+    );
+  }
+
+  // Access gating logic
+  let isAllowed = false;
+  if (userInfo) {
+    if (userInfo.role === 'admin' || userInfo.role === 'accountant') {
+      isAllowed = true;
+    } else if (userInfo.role === 'lawyer') {
+      const rank = userInfo.lawyerProfile?.rank;
+      if (rank === 'Partner' || rank === 'Junior Partner') {
+        isAllowed = true;
+      } else if ((rank === 'Senior Associate' || rank === 'Associate') && userInfo.lawyerProfile?._id && Array.isArray(matterTeam)) {
+        // Check if lawyer is part of teamAssigned
+        isAllowed = matterTeam.some(member => member?._id === userInfo.lawyerProfile._id);
+      }
+    }
+  }
+
+  if (!isAllowed) {
+    return (
+      <Container component="main" maxWidth="sm">
+        <Box sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Typography component="h1" variant="h5">Access Denied</Typography>
+          <Alert severity="error" sx={{ width: '100%', mt: 2 }}>
+            You do not have permission to edit this matter. Only Partners, Junior Partners, Admins, Accountants, and assigned Senior Associates/Associates can access this page.
+          </Alert>
+        </Box>
+      </Container>
     );
   }
 

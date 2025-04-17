@@ -6,7 +6,7 @@ import {
   FormControl, InputLabel, Select, MenuItem, Autocomplete,
 } from '@mui/material';
 
-const userRoles = ['admin', 'lawyer', 'staff'];
+const userRoles = ['admin', 'lawyer', 'accountant', 'staff'];
 
 function AddUserPage() {
   const [name, setName] = useState('');

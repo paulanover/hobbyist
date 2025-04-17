@@ -13,19 +13,27 @@ exports.getLawyerTimeSheetReport = async (req, res) => {
     const { client, matter, lawyer, dateFrom, dateTo } = req.query;
     const query = {};
     // Restrict lawyers to only see their own matters/clients
-    if (req.user.role === 'lawyer') {
-      // Find matters where the lawyer is assigned
+    const role = req.user.role || 'lawyer';
+    if (role === 'lawyer') {
+      // Find matters where the lawyer is assigned or is an owner of the client
+      // 1. Get all client IDs where the lawyer is an owner
+      const lawyerId = req.user.lawyerProfile || req.user._id;
+      const ownedClients = await Client.find({ lawyerOwners: lawyerId }, '_id');
+      const ownedClientIds = ownedClients.map(c => c._id.toString());
+      // 2. Find matters where:
+      //    - teamAssigned includes lawyer
+      //    - OR client is owned by lawyer
       const assignedMatters = await Matter.find({
         $or: [
-          { teamAssigned: req.user.lawyer }, // lawyer._id
-          { 'teamAssigned': req.user._id }, // fallback, if req.user.lawyer is not set
+          { teamAssigned: lawyerId },
+          { client: { $in: ownedClientIds } },
         ]
       }, '_id');
       const assignedMatterIds = assignedMatters.map(m => m._id.toString());
       // Only allow time entries for these matters, or where the lawyer is the time entry owner
       query.$or = [
         { matter: { $in: assignedMatterIds } },
-        { lawyer: req.user.lawyer || req.user._id }
+        { lawyer: lawyerId }
       ];
     }
     // Date range filter
@@ -70,19 +78,35 @@ exports.getLawyerTimeSheetReport = async (req, res) => {
     // Query TimeEntry, populate all needed fields
     const entries = await TimeEntry.find(query)
       .populate({ path: 'lawyer', select: 'name initials' })
-      .populate({ path: 'matter', select: 'title docketNumber client', populate: { path: 'client', select: 'name' } })
+      .populate({ 
+        path: 'matter', 
+        select: 'title docketNumber client teamAssigned', 
+        populate: [
+          { path: 'client', select: 'name' },
+          { path: 'teamAssigned', select: 'initials name' }
+        ]
+      })
       .sort({ 'matter.docketNumber': 1, date: 1 });
 
     // Format output
-    const result = entries.map(e => ({
-      clientName: e.matter && e.matter.client && e.matter.client.name,
-      docketNumber: e.matter && e.matter.docketNumber,
-      matterTitle: e.matter && e.matter.title,
-      description: e.description,
-      lawyerInitials: e.lawyer && e.lawyer.initials,
-      timeSpent: e.hours,
-      date: e.date,
-    }));
+    const result = entries.map(e => {
+      // DEBUG: Log teamAssigned for each entry
+      if (e.matter && e.matter.teamAssigned) {
+        console.log(`[LTS DEBUG] Matter: ${e.matter.title}, teamAssigned:`, e.matter.teamAssigned);
+      }
+      return {
+        clientName: e.matter && e.matter.client && e.matter.client.name,
+        docketNumber: e.matter && e.matter.docketNumber,
+        matterTitle: e.matter && e.matter.title,
+        description: e.description,
+        lawyerInitials: e.lawyer && e.lawyer.initials,
+        timeSpent: e.hours,
+        date: e.date,
+        teamMembers: e.matter && e.matter.teamAssigned && Array.isArray(e.matter.teamAssigned)
+          ? e.matter.teamAssigned.map(lawyer => lawyer.initials || lawyer.name).join(', ')
+          : ''
+      };
+    });
     res.json(result);
   } catch (err) {
     console.error('[LTS] Error generating report:', err);
