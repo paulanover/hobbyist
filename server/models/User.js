@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'lawyer', 'staff'], // Example roles
+    enum: ['admin', 'lawyer', 'staff', 'accountant'], // Added accountant role
     default: 'staff',
   },
   // Optional: Link to a Lawyer profile if the user is a lawyer

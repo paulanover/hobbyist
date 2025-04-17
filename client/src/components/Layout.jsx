@@ -10,6 +10,7 @@ import GavelIcon from '@mui/icons-material/Gavel';
 import FolderIcon from '@mui/icons-material/Folder';
 import PeopleIcon from '@mui/icons-material/People';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { useAuth } from '../context/AuthContext';
 
 const drawerWidth = 240;
@@ -70,6 +71,51 @@ function Layout({ children }) {
             <ListItemText primary="Dashboard" />
           </ListItemButton>
         </ListItem>
+        {(userInfo?.role === 'admin' || userInfo?.role === 'lawyer') && (
+          <>
+            <ListItem disablePadding>
+              <ListItemButton
+                component={NavLink}
+                to="/timesheet"
+                style={({ isActive }) => isActive ? activeStyle : undefined}
+                onClick={() => setMobileOpen(false)}
+              >
+                <ListItemIcon>
+                  <AccessTimeIcon />
+                </ListItemIcon>
+                <ListItemText primary="Electronic Time Sheet" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton
+                component={NavLink}
+                to="/timesheet/monthly"
+                style={({ isActive }) => isActive ? activeStyle : undefined}
+                onClick={() => setMobileOpen(false)}
+              >
+                <ListItemIcon>
+                  <AccessTimeIcon />
+                </ListItemIcon>
+                <ListItemText primary="Monthly Timesheet" />
+              </ListItemButton>
+            </ListItem>
+          </>
+        )}
+        {(userInfo?.role === 'admin' || userInfo?.role === 'accountant' || userInfo?.role === 'lawyer') && (
+          <ListItem disablePadding>
+            <ListItemButton
+              component={NavLink}
+              to="/lawyer-timesheet"
+              style={({ isActive }) => isActive ? activeStyle : undefined}
+              onClick={() => setMobileOpen(false)}
+            >
+              <ListItemIcon>
+                <AccessTimeIcon />
+              </ListItemIcon>
+              <ListItemText primary="Lawyer Time Sheet" />
+            </ListItemButton>
+          </ListItem>
+        )}
         <ListItem disablePadding>
           <ListItemButton
             component={NavLink}

@@ -31,7 +31,12 @@ export default defineConfig(({ mode }) => ({
     // Only configure HTTPS if certificates were found
     https: httpsOptions, // Use the generated options
     port: 5173, // Keep the port consistent
-    // Optional: Proxy API requests if needed
-    // proxy: { ... }
+    proxy: {
+      '/api': {
+        target: 'https://localhost:5001',
+        changeOrigin: true,
+        secure: false, // Accept self-signed certs for local dev
+      },
+    },
   },
 }));

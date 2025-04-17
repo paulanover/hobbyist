@@ -138,13 +138,18 @@ function AddClientPage() {
               />
             )}
             renderTags={(value, getTagProps) =>
-              value.map((option, index) => (
-                <Chip
-                  variant="outlined"
-                  label={`${option.name} (${option.initials})`}
-                  {...getTagProps({ index })}
-                />
-              ))
+              value.map((option, index) => {
+                const tagProps = getTagProps({ index });
+                const { key, ...rest } = tagProps;
+                return (
+                  <Chip
+                    key={key}
+                    variant="outlined"
+                    label={`${option.name} (${option.initials})`}
+                    {...rest}
+                  />
+                );
+              })
             }
             fullWidth
           />

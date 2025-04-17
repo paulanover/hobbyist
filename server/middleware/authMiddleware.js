@@ -9,8 +9,8 @@ const protect = asyncHandler(async (req, res, next) => {
   console.log(`[Protect Middleware] Triggered for URL: ${req.originalUrl}`);
   console.log('[Protect Middleware] Received Cookies:', req.cookies); // Log the whole cookies object
 
-  // Read the JWT from the 'jwt' cookie
-  token = req.cookies.jwt; // Read from cookie instead of header
+  // Read the JWT from the 'token' or 'jwt' cookie
+  token = req.cookies.token || req.cookies.jwt; // Accept both for compatibility
 
   if (token) {
     console.log('[Protect Middleware] Found JWT cookie value (first few chars):', token.substring(0, 10) + '...'); // Log confirmation and part of token

@@ -119,8 +119,16 @@ app.use('/api/lawyers', lawyerRoutes);
 app.use('/api/matters', matterRoutes); // Mount the matter routes
 app.use('/api/clients', clientRoutes); // Use client routes
 app.use('/api/time-entries', timeEntryRoutes);
+const ltsRoutes = require('./routes/ltsRoutes');
+app.use('/api/lts', ltsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+const auditLogRoutes = require('./routes/auditLogRoutes');
+app.use('/api/audit-logs', auditLogRoutes);
+
+// TEMP: Debug endpoint to inspect raw audit logs
+const auditLogDebugRoutes = require('./routes/auditLogDebug');
+app.use('/api/audit-logs', auditLogDebugRoutes);
 console.log('API routes registered.');
 
 // 404 handler (runs ONLY if no routes above matched)

@@ -243,7 +243,57 @@ function MatterDetailPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* --- Activity Log Section --- */}
+      <Paper sx={{ mt: 5, p: 3 }}>
+        <Typography variant="h6" gutterBottom>Activity Log</Typography>
+        <MatterActivityLog matterId={matterId} />
+      </Paper>
     </Container>
+  );
+}
+
+function MatterActivityLog({ matterId }) {
+  const [entries, setEntries] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
+
+  React.useEffect(() => {
+    setLoading(true);
+    setError('');
+    axiosInstance.get(`/time-entries/matter/${matterId}`)
+      .then(res => setEntries(res.data))
+      .catch(err => setError('Failed to load activity log'))
+      .finally(() => setLoading(false));
+  }, [matterId]);
+
+  if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}><CircularProgress size={22} /></Box>;
+  if (error) return <Alert severity="error" sx={{ my: 2 }}>{error}</Alert>;
+  if (!entries.length) return <Typography color="text.secondary" sx={{ my: 2 }}>No activities logged for this matter yet.</Typography>;
+
+  return (
+    <Box sx={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
+        <thead>
+          <tr style={{ background: '#f5f5f5' }}>
+            <th style={{ padding: 8, borderBottom: '1px solid #ddd' }}>Date</th>
+            <th style={{ padding: 8, borderBottom: '1px solid #ddd' }}>Lawyer</th>
+            <th style={{ padding: 8, borderBottom: '1px solid #ddd' }}>Description</th>
+            <th style={{ padding: 8, borderBottom: '1px solid #ddd' }}>Time Spent (hrs)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map(entry => (
+            <tr key={entry._id}>
+              <td style={{ padding: 8, borderBottom: '1px solid #eee', whiteSpace: 'nowrap' }}>{new Date(entry.date).toLocaleDateString()}</td>
+              <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'center' }}>{entry.lawyerInitials}</td>
+              <td style={{ padding: 8, borderBottom: '1px solid #eee' }}>{entry.description}</td>
+              <td style={{ padding: 8, borderBottom: '1px solid #eee', textAlign: 'right' }}>{entry.hours}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Box>
   );
 }
 

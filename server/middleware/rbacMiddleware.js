@@ -6,7 +6,15 @@ const Matter = require('../models/Matter.js');
 
 // Middleware: Only Partners/Junior Partners who own the client or matter
 const lawyerAssignedOrOwner = asyncHandler(async (req, res, next) => {
-  if (!req.user || req.user.role !== 'lawyer' || !req.user.lawyerProfile) {
+  if (!req.user) {
+    res.status(403);
+    throw new Error('Not authorized: no user');
+  }
+  if (req.user.role === 'admin') {
+    // Admins can view all matters and clients
+    return next();
+  }
+  if (req.user.role !== 'lawyer' || !req.user.lawyerProfile) {
     res.status(403);
     throw new Error('Not authorized: not a lawyer');
   }

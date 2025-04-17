@@ -24,6 +24,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import AdminRoute from './components/AdminRoute';
 import LawyerTimesheet from './pages/LawyerTimesheet';
+import LawyerMonthlyTimesheet from './pages/LawyerMonthlyTimesheet';
+import ActivityLogPage from './pages/ActivityLogPage';
+import LawyerTimeSheetPage from './pages/LawyerTimeSheetPage';
 
 function App() {
   return (
@@ -39,6 +42,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/timesheet" element={<LawyerTimesheet />} />
+            <Route path="/timesheet/monthly" element={<LawyerMonthlyTimesheet />} />
             <Route path="/lawyers" element={<LawyerListPage />} />
             <Route path="/lawyers/:id" element={<LawyerDetailPage />} />
             <Route path="/matters" element={<MatterListPage />} />
@@ -49,15 +53,18 @@ function App() {
             <Route path="/clients/add" element={<AddClientPage />} />
             <Route path="/clients/edit/:id" element={<EditClientPage />} />
             <Route path="/clients/:id" element={<ClientDetailPage />} />
+            <Route path="/lawyer-timesheet" element={<LawyerTimeSheetPage />} />
           </Route>
 
-          {/* Admin Routes */}
+          {/* Admin and Accountant Routes */}
           <Route element={<AdminRoute />}>
             <Route path="/lawyers/add" element={<AddLawyerPage />} />
             <Route path="/lawyers/edit/:id" element={<EditLawyerPage />} />
             <Route path="/users" element={<UserListPage />} />
             <Route path="/users/add" element={<AddUserPage />} />
             <Route path="/users/edit/:id" element={<EditUserPage />} />
+            <Route path="/activity-log" element={<ActivityLogPage />} />
+
           </Route>
         </Routes>
       </Layout>

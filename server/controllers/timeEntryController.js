@@ -2,6 +2,7 @@ const { TimeEntry } = require('../models/TimeEntry.js');
 const { Matter } = require('../models/Matter.js');
 const { Lawyer } = require('../models/Lawyer.js');
 const asyncHandler = require('../middleware/asyncHandler.js');
+const { addAuditLog } = require('../utils/auditLogger');
 
 // @desc    Create a new time entry
 // @route   POST /api/time-entries
@@ -26,6 +27,17 @@ const createTimeEntry = asyncHandler(async (req, res) => {
     billable,
   });
   const created = await timeEntry.save();
+
+  // Audit log: Created Time Entry
+  await addAuditLog({
+    userId: req.user._id,
+    actionType: 'CREATE_TIME_ENTRY',
+    description: `Created time entry for matter ${matterDoc.title || matterDoc._id}`,
+    entityType: 'Matter',
+    entityId: matterDoc._id,
+    ipAddress: req.ip || '',
+  });
+
   res.status(201).json(created);
 });
 
@@ -58,6 +70,17 @@ const updateTimeEntry = asyncHandler(async (req, res) => {
   if (description) entry.description = description;
   if (typeof billable === 'boolean') entry.billable = billable;
   const updated = await entry.save();
+
+  // Audit log: Updated Time Entry
+  await addAuditLog({
+    userId: req.user._id,
+    actionType: 'UPDATE_TIME_ENTRY',
+    description: `Updated time entry ${entry._id}`,
+    entityType: 'Matter',
+    entityId: entry.matter,
+    ipAddress: req.ip || '',
+  });
+
   res.status(200).json(updated);
 });
 
@@ -76,6 +99,17 @@ const deleteTimeEntry = asyncHandler(async (req, res) => {
     throw new Error('Not authorized to delete this entry');
   }
   await TimeEntry.deleteOne({ _id: entry._id });
+
+  // Audit log: Deleted Time Entry
+  await addAuditLog({
+    userId: req.user._id,
+    actionType: 'DELETE_TIME_ENTRY',
+    description: `Deleted time entry ${entry._id}`,
+    entityType: 'Matter',
+    entityId: entry.matter,
+    ipAddress: req.ip || '',
+  });
+
   res.status(200).json({ message: 'Time entry deleted' });
 });
 

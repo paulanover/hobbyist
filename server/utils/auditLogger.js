@@ -1,33 +1,23 @@
-const { pool } = require('../config/db');
+const AuditLog = require('../models/auditLogModel');
 
 /**
- * Add an entry to the audit log
+ * Add an entry to the audit log (MongoDB only)
  * @param {Object} logData - Log data
  */
 exports.addAuditLog = async (logData) => {
-  // Check if pool exists (might be removed if fully migrated)
-  if (!pool) {
-      console.warn('Audit logging skipped: MySQL pool not configured.');
-      return false;
-  }
+  console.log('[addAuditLog] Called with:', JSON.stringify(logData, null, 2));
   try {
-    const { userId, actionType, description, entityType, entityId, ipAddress } = logData;
-
-    // Convert Mongoose ObjectId to string if necessary for MySQL
-    const userIdString = userId?.toString();
-    const entityIdString = entityId?.toString();
-
-    await pool.query(
-      `INSERT INTO AuditLogs
-      (user_id, action_type, description, entity_type, entity_id, ip_address)
-      VALUES (?, ?, ?, ?, ?, ?)`,
-      // Use string representations for IDs if storing ObjectId in MySQL VARCHAR
-      [userIdString, actionType, description, entityType || null, entityIdString || null, ipAddress]
-    );
-
+    const log = new AuditLog(logData);
+    await log.save();
+    console.log('[addAuditLog] Successfully saved audit log:', log._id);
     return true;
   } catch (error) {
-    console.error('Error adding audit log:', error);
+    console.error('[addAuditLog] Error adding audit log (MongoDB):', error);
+    if (error.errors) {
+      Object.keys(error.errors).forEach(key => {
+        console.error(`[addAuditLog] Validation error for ${key}:`, error.errors[key].message);
+      });
+    }
     return false;
   }
 };
