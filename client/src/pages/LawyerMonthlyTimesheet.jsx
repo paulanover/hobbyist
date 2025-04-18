@@ -3,13 +3,24 @@ import axiosInstance from '../api/axiosConfig';
 import { Box, Typography, CircularProgress, Alert, Paper, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 
 function getMonthOptions() {
+  // Always include the current month as the first option
   const now = new Date();
   const months = [];
-  for (let i = 0; i < 12; i++) {
+  const seen = new Set();
+  // Add current month
+  const currentValue = now.toISOString().slice(0, 7);
+  const currentLabel = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+  months.push({ value: currentValue, label: currentLabel });
+  seen.add(currentValue);
+  // Add previous 11 months
+  for (let i = 1; i < 12; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const value = d.toISOString().slice(0, 7); // YYYY-MM
-    const label = d.toLocaleString('default', { month: 'long', year: 'numeric' });
-    months.push({ value, label });
+    if (!seen.has(value)) {
+      const label = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+      months.push({ value, label });
+      seen.add(value);
+    }
   }
   return months;
 }
@@ -27,7 +38,10 @@ export default function LawyerMonthlyTimesheet() {
     setLoading(true);
     setError('');
     axiosInstance.get(`/time-entries/my?month=${month}`)
-      .then(res => setEntries(res.data))
+      .then(res => {
+        setEntries(res.data);
+        console.log('[LawyerMonthlyTimesheet] API response:', res.data);
+      })
       .catch(() => setError('Failed to load timesheet'))
       .finally(() => setLoading(false));
   }, [month]);
