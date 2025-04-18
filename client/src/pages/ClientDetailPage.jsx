@@ -119,12 +119,14 @@ function ClientDetailPage() {
         const { data } = await axiosInstance.get(`/clients/${clientId}/details`);
         setClientData(data);
       } catch (err) {
-        const message = err.response?.data?.message || err.message;
-        // SECURITY: Consider logging less verbose errors to the console in production.
-        // Send detailed errors to a dedicated logging service instead.
-        // Ensure backend 'message' doesn't leak sensitive info.
-        setError(`Failed to load client details: ${message}`);
-        console.error('Fetch client details error:', err);
+        let message = err.response?.data?.message || err.message;
+        if (err.response?.status === 403) {
+          message = 'You do not have permission to view this client. Please contact an administrator if you believe this is an error.';
+        } else if (err.response?.status === 404) {
+          message = 'Client not found.';
+        }
+        setError(message);
+        setClientData(null);
       } finally {
         setLoading(false);
       }
@@ -149,11 +151,26 @@ function ClientDetailPage() {
 
 
   if (loading) {
-    return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
+    return (
+      <Container maxWidth="md" sx={{ mt: 6 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
   }
 
   if (error) {
-    return <Container sx={{ mt: 4 }}><Alert severity="error">{error}</Alert></Container>;
+    return (
+      <Container maxWidth="md" sx={{ mt: 6 }}>
+        <Alert severity={error.includes('permission') ? 'warning' : 'error'} sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+        <Button variant="outlined" onClick={() => navigate(-1)} sx={{ mt: 2 }}>
+          Back
+        </Button>
+      </Container>
+    );
   }
 
   if (!clientData || !clientData.clientDetails) {

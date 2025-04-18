@@ -175,15 +175,29 @@ const getMyTimeEntriesByMonth = asyncHandler(async (req, res) => {
   const lawyer = req.user.lawyerProfile || req.user._id;
   const { month } = req.query; // format YYYY-MM
   let start, end;
+  // Always use Manila time (UTC+8) for month boundaries
+  // Helper to get Manila offset in ms (8 hours)
+  const MANILA_OFFSET_MS = 8 * 60 * 60 * 1000;
+  function getManilaMonthRange(monthString) {
+    // monthString: 'YYYY-MM'
+    const [year, month] = monthString.split('-').map(Number);
+    // Start of month in Manila time
+    const startLocal = new Date(year, month - 1, 1, 0, 0, 0, 0);
+    const endLocal = new Date(year, month, 1, 0, 0, 0, 0);
+    // Convert Manila time to UTC for MongoDB query
+    const start = new Date(startLocal.getTime() - MANILA_OFFSET_MS);
+    const end = new Date(endLocal.getTime() - MANILA_OFFSET_MS);
+    return { start, end };
+  }
+
   if (month && /^\d{4}-\d{2}$/.test(month)) {
-    start = new Date(`${month}-01T00:00:00.000Z`);
-    end = new Date(start);
-    end.setMonth(start.getMonth() + 1);
+    ({ start, end } = getManilaMonthRange(month));
   } else {
-    // Default: current month
-    start = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-    end = new Date(start);
-    end.setMonth(start.getMonth() + 1);
+    // Default: current month in Manila time
+    const now = new Date(Date.now() + MANILA_OFFSET_MS); // Convert to Manila local time
+    const manilaMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const manilaYear = now.getFullYear();
+    ({ start, end } = getManilaMonthRange(`${manilaYear}-${manilaMonth}`));
   }
   const entries = await TimeEntry.find({
     lawyer,

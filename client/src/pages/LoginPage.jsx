@@ -28,7 +28,7 @@ function LoginPage() {
     // Log userInfo changes
     console.log('[LoginPage] useEffect triggered. userInfo:', userInfo);
     if (userInfo) {
-      // Redirect lawyers to /timesheet, everyone else to /dashboard
+      // Lawyers: always land on /timesheet after login, but can access other modules based on backend RBAC
       if (userInfo.role === 'lawyer') {
         console.log('[LoginPage] userInfo found, role is lawyer, navigating to /timesheet');
         navigate('/timesheet', { replace: true });

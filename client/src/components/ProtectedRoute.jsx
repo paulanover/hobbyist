@@ -26,13 +26,13 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Lawyer role: only allow access to /timesheet
-  if (userInfo.role === 'lawyer' && location !== '/timesheet') {
-    console.log('[ProtectedRoute] Lawyer tried to access', location, 'redirecting to /timesheet');
-    return <Navigate to="/timesheet" replace />;
+  // Restrict dashboard access for accountants
+  if (location === '/dashboard' && userInfo.role === 'accountant') {
+    console.log('[ProtectedRoute] Accountant tried to access dashboard, redirecting to /unauthorized');
+    return <Navigate to="/unauthorized" replace />;
   }
 
-  // Non-lawyer: allow access to all protected routes
+  // All authenticated users (including lawyers) can access protected routes; backend RBAC will handle finer checks
   console.log('[ProtectedRoute] Authenticated, rendering Outlet');
   return <Outlet />; // Outlet renders the nested child route component
 };

@@ -234,7 +234,8 @@ const getClientsForLawyerMatters = asyncHandler(async (req, res) => {
   if (search) {
     clientQuery.name = { $regex: search, $options: 'i' };
   }
-  const clients = await Client.find(clientQuery);
+  const clients = await Client.find(clientQuery)
+    .populate('lawyerOwners', 'name initials'); // Populate owner details
   res.json(clients);
 });
 
@@ -268,7 +269,8 @@ const getClientsForLawyerRelevant = asyncHandler(async (req, res) => {
   if (search) {
     clientQuery.name = { $regex: search, $options: 'i' };
   }
-  const clients = await Client.find(clientQuery);
+  const clients = await Client.find(clientQuery)
+    .populate('lawyerOwners', 'name initials'); // Populate owner details
   console.log('[RelevantClients] clients:', clients.map(c => c.name));
   res.json(clients);
 });

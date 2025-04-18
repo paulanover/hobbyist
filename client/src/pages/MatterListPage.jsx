@@ -291,35 +291,6 @@ function MatterListPage() {
         </TableContainer>
       </Paper>
 
-      {/* Recently Deleted Matters Section */}
-      <Typography variant="h5" component="h2" sx={{ mb: 2 }}>
-        Recently Deleted Matters (Last 5 Years)
-      </Typography>
-      {errorDeleted && <Alert severity="warning" sx={{ mb: 2 }}>{errorDeleted}</Alert>}
-      <Paper>
-        {loadingDeleted ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress /></Box>
-        ) : deletedMatters.length === 0 ? (
-          <Typography sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
-            No recently deleted matters found.
-          </Typography>
-        ) : (
-          <List dense>
-            {deletedMatters.map((deleted) => (
-              <React.Fragment key={deleted._id || deleted.originalMatterId}> {/* Use appropriate key */}
-                <ListItem>
-                  <ListItemText
-                    primary={`${deleted.title || 'N/A'} (${deleted.docketNumber || 'N/A'})`}
-                    secondary={`Deleted on: ${new Date(deleted.deletedAt).toLocaleDateString()} by ${deleted.deletedBy?.name || 'Unknown User'}`}
-                  />
-                  {/* Add Restore button here if implementing restore functionality */}
-                </ListItem>
-                <Divider component="li" />
-              </React.Fragment>
-            ))}
-          </List>
-        )}
-      </Paper>
 
       {/* Confirmation Dialog */}
       <Dialog

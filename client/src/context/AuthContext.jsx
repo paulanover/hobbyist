@@ -13,7 +13,12 @@ export default function AuthProvider({ children }) {
     try {
       const { data } = await axiosInstance.get('/users/profile');
       console.log('[AuthContext] checkAuthStatus success:', data);
-      setUserInfo(data);
+      // Ensure lawyerProfile is always an object (not just ID)
+      if (data && data.lawyerProfile && typeof data.lawyerProfile === 'object') {
+        setUserInfo({ ...data, lawyerProfile: data.lawyerProfile });
+      } else {
+        setUserInfo(data);
+      }
       setError(null);
     } catch (err) {
       console.log('[AuthContext] checkAuthStatus failed (likely not logged in):', err.message);

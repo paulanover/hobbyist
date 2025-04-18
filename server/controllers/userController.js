@@ -9,7 +9,13 @@ const getUserProfile = asyncHandler(async (req, res) => {
   // req.user should be set by the 'protect' middleware from authMiddleware.js
   // It reads the cookie set by /api/auth/login
   console.log('[getUserProfile] req.user from middleware:', req.user?._id); // Log user from middleware
-  const user = await User.findById(req.user._id).select('-password'); // Exclude password
+  // Populate lawyerProfile with rank, name, and initials if present
+  const user = await User.findById(req.user._id)
+    .select('-password')
+    .populate({
+      path: 'lawyerProfile',
+      select: 'name initials rank',
+    });
 
   if (user) {
     res.json({
@@ -17,7 +23,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      lawyerProfile: user.lawyerProfile, // Include lawyerProfile if needed
+      lawyerProfile: user.lawyerProfile, // Now populated with rank, name, initials
     });
   } else {
     res.status(404);
