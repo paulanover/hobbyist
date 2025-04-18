@@ -115,21 +115,29 @@ app.get('/', (req, res, next) => {
 
 // Register API routes (runs after middleware and root route)
 console.log('Registering API routes...');
+console.log('Registering /api/auth');
 app.use('/api/auth', authRoutes);
+console.log('Registering /api/lawyers');
 app.use('/api/lawyers', lawyerRoutes);
+console.log('Registering /api/matters');
 app.use('/api/matters', matterRoutes); // Mount the matter routes
+console.log('Registering /api/clients');
 app.use('/api/clients', clientRoutes); // Use client routes
+console.log('Registering /api/time-entries');
 app.use('/api/time-entries', timeEntryRoutes);
 const ltsRoutes = require('./routes/ltsRoutes');
+console.log('Registering /api/lts');
 app.use('/api/lts', ltsRoutes);
+console.log('Registering /api/users');
 app.use('/api/users', userRoutes);
+console.log('Registering /api/dashboard');
 app.use('/api/dashboard', dashboardRoutes);
 const auditLogRoutes = require('./routes/auditLogRoutes');
+console.log('Registering /api/audit-logs (main)');
 app.use('/api/audit-logs', auditLogRoutes);
 
 // TEMP: Debug endpoint to inspect raw audit logs
-const auditLogDebugRoutes = require('./routes/auditLogDebug');
-app.use('/api/audit-logs', auditLogDebugRoutes);
+
 console.log('API routes registered.');
 
 // 404 handler (runs ONLY if no routes above matched)
@@ -189,5 +197,32 @@ process.on('SIGTERM', () => {
     });
   });
 });
+
+// --- Serve static files and SPA fallback (after all API and error handlers) ---
+// Use existing 'path' and 'fs' imports from the top of the file
+const frontendDistPath = path.resolve(__dirname, '../client/dist');
+if (fs.existsSync(frontendDistPath)) {
+  // Serve static assets
+  app.use(express.static(frontendDistPath));
+
+  // SPA fallback: serve index.html for non-API GET requests not matching a static file
+  app.get('*', (req, res, next) => {
+    // Only handle GET requests
+    if (req.method !== 'GET') return next();
+    // Do not interfere with API routes
+    if (req.path.startsWith('/api')) return next();
+    // Check if the request accepts HTML (not e.g. XHR for JSON)
+    if (!req.headers.accept || !req.headers.accept.includes('text/html')) return next();
+    const indexHtmlPath = path.join(frontendDistPath, 'index.html');
+    if (fs.existsSync(indexHtmlPath)) {
+      res.sendFile(indexHtmlPath);
+    } else {
+      res.status(404).send('index.html not found');
+    }
+  });
+  console.log('Static file serving and SPA fallback enabled for client/dist.');
+} else {
+  console.warn('client/dist not found; static file serving and SPA fallback not enabled.');
+}
 
 module.exports = app; // Export app instance

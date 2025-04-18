@@ -7,17 +7,20 @@ const { protect } = require('../middleware/authMiddleware');
 router.get('/', protect, auditLogController.getAuditLogs);
 
 // TEMP: Debug endpoint to list latest 10 audit logs (raw)
-router.get('/debug-latest', protect, async (req, res) => {
-  try {
-    const AuditLog = require('../models/auditLogModel');
-    const logs = await AuditLog.find({})
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .lean();
-    res.json(logs);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch logs', details: String(err) });
-  }
-});
+if (process.env.NODE_ENV !== 'production') {
+  router.get('/debug-latest', async (req, res) => {
+    try {
+      const AuditLog = require('../models/auditLogModel');
+      const logs = await AuditLog.find({})
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean();
+      res.json(logs);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to fetch logs', details: String(err) });
+    }
+  });
+}
+
 
 module.exports = router;

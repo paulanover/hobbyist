@@ -70,15 +70,20 @@ const registerUser = asyncHandler(async (req, res) => {
     const token = generateToken(user._id);
     setTokenCookie(res, token); // Set HttpOnly cookie
 
-    // Send back only user info in the JSON body
+    // Populate lawyerProfile with rank, name, initials
+    const populatedUser = await User.findById(user._id)
+      .select('-password')
+      .populate({
+        path: 'lawyerProfile',
+        select: 'name initials rank',
+      });
     res.status(201).json({
-      // Token is NOT sent in the body anymore
       user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        lawyerProfile: user.lawyerProfile,
+        _id: populatedUser._id,
+        name: populatedUser.name,
+        email: populatedUser.email,
+        role: populatedUser.role,
+        lawyerProfile: populatedUser.lawyerProfile,
       }
     });
   } else {
@@ -107,15 +112,20 @@ const loginUser = asyncHandler(async (req, res) => {
     console.log('[loginUser] User authenticated. Calling setTokenCookie...'); // Added log
     setTokenCookie(res, token); // Set HttpOnly cookie
 
-    // Prepare the response data (user info only)
+    // Populate lawyerProfile with rank, name, initials
+    const populatedUser = await User.findById(user._id)
+      .select('-password')
+      .populate({
+        path: 'lawyerProfile',
+        select: 'name initials rank',
+      });
     const responseData = {
-      // Token is NOT sent in the body anymore
       user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        lawyerProfile: user.lawyerProfile,
+        _id: populatedUser._id,
+        name: populatedUser.name,
+        email: populatedUser.email,
+        role: populatedUser.role,
+        lawyerProfile: populatedUser.lawyerProfile,
       }
     };
 
