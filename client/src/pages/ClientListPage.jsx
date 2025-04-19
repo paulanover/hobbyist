@@ -37,16 +37,15 @@ function ClientListPage() {
         const allRes = await axiosInstance.get('/clients');
         const allClients = allRes.data || [];
 
-        // 4. Compute sets
-        const ownedIds = new Set(owned.map(c => c._id));
+        // 4. Separate owner and team clients
+        const ownerClients = owned.filter(c => c.lawyerOwners?.some(o => o._id === userInfo?.lawyerProfile?._id));
+        const ownerIds = new Set(ownerClients.map(c => c._id));
+        const teamOnlyClients = team.filter(c => !ownerIds.has(c._id));
         const teamIds = new Set(team.map(c => c._id));
 
-        // 5. Owned: those where user is owner
-        setOwnedClients(owned.filter(c => c.lawyerOwners && c.lawyerOwners.some(o => o._id === userInfo?.lawyerProfile?._id)));
-        // 6. Team: those where user is team member but not owner
-        setTeamClients(team.filter(c => !ownedIds.has(c._id)));
-        // 7. Others: all not in owned or team
-        setOtherClients(allClients.filter(c => !ownedIds.has(c._id) && !teamIds.has(c._id)));
+        setOwnedClients(ownerClients);
+        setTeamClients(teamOnlyClients);
+        setOtherClients(allClients.filter(c => !ownerIds.has(c._id) && !teamIds.has(c._id)));
       } catch (err) {
         const message = err.response?.data?.message || err.message;
         setError(`Failed to fetch clients: ${message}`);

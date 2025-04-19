@@ -47,6 +47,11 @@ const lawyerSchema = new mongoose.Schema({
     },
     default: 'Active', // Default to Active
   },
+  // Date the lawyer was hired
+  dateHired: {
+    type: Date,
+    required: [true, 'Date hired is required'],
+  },
   mattersAssigned: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Matter', // Reference to the Matter model (we'll create this next)

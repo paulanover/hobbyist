@@ -7,12 +7,12 @@ const asyncHandler = require('../middleware/asyncHandler.js');
 // @route   POST /api/lawyers
 // @access  Private/Admin
 const createLawyer = asyncHandler(async (req, res) => {
-  const { name, address, initials, email, rank, status } = req.body; // Add status
+  const { name, address, initials, email, rank, status, dateHired } = req.body; // Include dateHired
 
   // Basic validation
-  if (!name || !initials || !email || !rank) { // Status has a default, so not strictly required in input
+  if (!name || !initials || !email || !rank || !dateHired) {
     res.status(400);
-    throw new Error('Please provide name, initials, email, and rank for the lawyer');
+    throw new Error('Please provide name, initials, email, rank, and date hired for the lawyer');
   }
 
   // Check if lawyer already exists by email (optional but good practice)
@@ -29,6 +29,7 @@ const createLawyer = asyncHandler(async (req, res) => {
     email,
     rank,
     status: status || 'Active', // Use provided status or default to Active
+    dateHired, // Set date hired
   });
 
   const createdLawyer = await lawyer.save();
@@ -66,12 +67,14 @@ const updateLawyer = asyncHandler(async (req, res) => {
   const lawyer = await Lawyer.findById(req.params.id);
 
   if (lawyer) {
+    // Assign updated fields
     lawyer.name = req.body.name ?? lawyer.name;
     lawyer.address = req.body.address ?? lawyer.address;
     lawyer.initials = req.body.initials ?? lawyer.initials;
     lawyer.email = req.body.email ?? lawyer.email;
     lawyer.rank = req.body.rank ?? lawyer.rank;
     lawyer.status = req.body.status ?? lawyer.status; // Update status
+    lawyer.dateHired = req.body.dateHired ?? lawyer.dateHired; // Update date hired
 
     // Prevent changing unique email to one that already exists
     if (req.body.email && req.body.email !== lawyer.email) {
@@ -90,6 +93,7 @@ const updateLawyer = asyncHandler(async (req, res) => {
     if (lawyer.isModified('email')) changedFields.push('email');
     if (lawyer.isModified('rank')) changedFields.push('rank');
     if (lawyer.isModified('status')) changedFields.push('status');
+    if (lawyer.isModified('dateHired')) changedFields.push('dateHired');
 
     // Generate description string
     let changeDescription = 'No changes detected';

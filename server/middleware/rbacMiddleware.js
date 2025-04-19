@@ -111,4 +111,46 @@ const lawyerAssignedOrOwner = asyncHandler(async (req, res, next) => {
   next();
 });
 
-module.exports = { partnerOrOwner, associateOrAssigned, lawyerAssignedOrOwner };
+// Middleware: Allow Partners/Junior Partners to edit profiles of Associates and Senior Associates
+const editLawyerProfile = asyncHandler(async (req, res, next) => {
+  if (!req.user) {
+    res.status(403);
+    throw new Error('Not authorized: no user');
+  }
+  // Admins can edit any lawyer
+  if (req.user.role === 'admin') return next();
+
+  // Only lawyers with a profile
+  if (req.user.role !== 'lawyer' || !req.user.lawyerProfile) {
+    res.status(403);
+    throw new Error('Not authorized: not a lawyer');
+  }
+
+  // Check logged-in lawyer's rank
+  const loggedInLawyer = await Lawyer.findById(req.user.lawyerProfile);
+  if (!loggedInLawyer || !['Partner', 'Junior Partner'].includes(loggedInLawyer.rank)) {
+    res.status(403);
+    throw new Error('Not authorized: only Partners or Junior Partners can edit lawyer profiles');
+  }
+
+  // Check target lawyer exists and rank
+  const targetLawyer = await Lawyer.findById(req.params.id);
+  if (!targetLawyer) {
+    res.status(404);
+    throw new Error('Lawyer not found');
+  }
+  // Only allow editing Associates and Senior Associates
+  if (!['Associate', 'Senior Associate'].includes(targetLawyer.rank)) {
+    res.status(403);
+    throw new Error('Not authorized: cannot edit this lawyer');
+  }
+
+  next();
+});
+
+module.exports = {
+  partnerOrOwner,
+  associateOrAssigned,
+  lawyerAssignedOrOwner,
+  editLawyerProfile
+};

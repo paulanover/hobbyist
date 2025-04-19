@@ -26,6 +26,7 @@ function AddLawyerPage() {
   const [address, setAddress] = useState('');
   const [rank, setRank] = useState('');
   const [status, setStatus] = useState('Active'); // Add state for status, default to Active
+  const [dateHired, setDateHired] = useState(''); // Add state for date hired
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -36,8 +37,8 @@ function AddLawyerPage() {
     setLoading(true);
 
     // Basic frontend validation (can be enhanced)
-    if (!name || !initials || !email || !rank) {
-        setError('Name, Initials, Email, and Rank are required.');
+    if (!name || !initials || !email || !rank || !dateHired) {
+        setError('Name, Initials, Email, Rank, and Date Hired are required.');
         setLoading(false);
         return;
     }
@@ -50,6 +51,7 @@ function AddLawyerPage() {
         address,
         rank,
         status, // Include status in payload
+        dateHired, // Include date hired in payload
       });
 
       console.log('Lawyer created:', data);
@@ -161,6 +163,19 @@ function AddLawyerPage() {
               ))}
             </Select>
           </FormControl>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="dateHired"
+            label="Date Hired"
+            name="dateHired"
+            type="date"
+            InputLabelProps={{ shrink: true }}
+            value={dateHired}
+            onChange={(e) => setDateHired(e.target.value)}
+            disabled={loading}
+          />
           <TextField
             margin="normal"
             fullWidth
