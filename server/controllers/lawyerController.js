@@ -72,9 +72,22 @@ const updateLawyer = asyncHandler(async (req, res) => {
     lawyer.address = req.body.address ?? lawyer.address;
     lawyer.initials = req.body.initials ?? lawyer.initials;
     lawyer.email = req.body.email ?? lawyer.email;
-    lawyer.rank = req.body.rank ?? lawyer.rank;
     lawyer.status = req.body.status ?? lawyer.status; // Update status
     lawyer.dateHired = req.body.dateHired ?? lawyer.dateHired; // Update date hired
+
+    // Log rank change if changed
+    const oldRank = lawyer.rank;
+    const newRank = req.body.rank ?? lawyer.rank;
+    if (oldRank !== newRank) {
+      lawyer.rankHistory = lawyer.rankHistory || [];
+      lawyer.rankHistory.push({
+        oldRank,
+        newRank,
+        changedBy: req.user._id,
+        changedAt: new Date(),
+      });
+    }
+    lawyer.rank = newRank;
 
     // Prevent changing unique email to one that already exists
     if (req.body.email && req.body.email !== lawyer.email) {

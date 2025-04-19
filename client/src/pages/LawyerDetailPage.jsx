@@ -88,18 +88,37 @@ function LawyerDetailPage() {
              {/* <Button component={RouterLink} to={`/lawyers/edit/${lawyerId}`} variant="outlined" size="small">Edit Profile</Button> */}
         </Box>
 
+        <TableContainer component={Paper} sx={{ mb: 4 }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell><strong>Rank</strong></TableCell>
+                <TableCell><strong>Email</strong></TableCell>
+                <TableCell><strong>Address</strong></TableCell>
+                <TableCell><strong>Date Hired</strong></TableCell>
+                <TableCell><strong>Rank History</strong></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <TableRow>
+                <TableCell>{lawyerDetails.rank}</TableCell>
+                <TableCell>{lawyerDetails.email}</TableCell>
+                <TableCell>{lawyerDetails.address || 'N/A'}</TableCell>
+                <TableCell>{lawyerDetails.dateHired ? new Date(lawyerDetails.dateHired).toLocaleDateString() : 'N/A'}</TableCell>
+                <TableCell>
+                  {lawyerDetails.rankHistory && lawyerDetails.rankHistory.length > 0
+                    ? lawyerDetails.rankHistory.map((h, idx) => (
+                        <Typography key={idx} variant="body2">
+                          {h.oldRank} → {h.newRank} on {new Date(h.changedAt).toLocaleString()}
+                        </Typography>
+                      ))
+                    : 'None'}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle1"><strong>Rank:</strong> {lawyerDetails.rank}</Typography>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Typography variant="subtitle1"><strong>Email:</strong> {lawyerDetails.email}</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="subtitle1"><strong>Address:</strong> {lawyerDetails.address || 'N/A'}</Typography>
-          </Grid>
-        </Grid>
       </Paper>
 
       <Divider sx={{ my: 4 }} />

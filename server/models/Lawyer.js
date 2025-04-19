@@ -52,6 +52,29 @@ const lawyerSchema = new mongoose.Schema({
     type: Date,
     required: [true, 'Date hired is required'],
   },
+  // History of rank changes
+  rankHistory: [{
+    oldRank: {
+      type: String,
+      enum: lawyerRanks,
+      required: true,
+    },
+    newRank: {
+      type: String,
+      enum: lawyerRanks,
+      required: true,
+    },
+    changedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    changedAt: {
+      type: Date,
+      default: Date.now,
+      required: true,
+    },
+  }],
   mattersAssigned: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Matter', // Reference to the Matter model (we'll create this next)
