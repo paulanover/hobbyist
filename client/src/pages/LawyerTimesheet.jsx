@@ -124,7 +124,9 @@ export default function LawyerTimesheet() {
       setSelectedClient(null);
       setSelectedMatter(null);
     } catch (err) {
-      setError('Failed to save timesheet.');
+      // Display server error message if available
+      const message = err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to save timesheet.';
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -320,4 +322,3 @@ export default function LawyerTimesheet() {
     </TimesheetErrorBoundary>
   );
 }
-

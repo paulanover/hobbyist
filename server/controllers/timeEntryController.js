@@ -8,6 +8,11 @@ const { addAuditLog } = require('../utils/auditLogger');
 // @route   POST /api/time-entries
 // @access  Private (lawyer only)
 const createTimeEntry = asyncHandler(async (req, res) => {
+  // Only lawyers may create time entries
+  if (req.user.role !== 'lawyer' || !req.user.lawyerProfile) {
+    res.status(403);
+    throw new Error('Not authorized: only lawyers can create time entries');
+  }
   const { matter, date, hours, description, billable } = req.body;
   const lawyer = req.user.lawyerProfile || req.user._id; // Support both user and lawyer direct
 

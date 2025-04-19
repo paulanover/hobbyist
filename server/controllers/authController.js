@@ -6,12 +6,11 @@ const asyncHandler = require('../middleware/asyncHandler.js');
 // Helper function to set the token cookie
 // Helper function to set the JWT cookie with mobile compatibility
 const setTokenCookie = (res, token) => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  // Best practice: mobile browsers require SameSite=None and Secure=true for cross-origin cookies
+  // Always use cross-site cookies (works on HTTPS localhost & production)
   const options = {
     httpOnly: true,
-    secure: isProduction, // Secure cookies only in production (HTTPS)
-    sameSite: isProduction ? 'none' : 'lax', // 'none' for production, 'lax' for local dev
+    secure: true,
+    sameSite: 'none',
     maxAge: 30 * 24 * 60 * 60 * 1000,
     path: '/',
   };
@@ -142,16 +141,15 @@ const loginUser = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/logout
 // @access  Private (requires user to be logged in to logout)
 const logoutUser = asyncHandler(async (req, res) => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  // Use the same settings as setTokenCookie for clearing
+  // Clear cookie with cross-site settings
   res.cookie('jwt', '', {
     httpOnly: true,
-    secure: isProduction, // Secure cookies only in production
-    sameSite: isProduction ? 'none' : 'lax', // Match the setting used when creating
-    expires: new Date(0), // Expire immediately
+    secure: true,
+    sameSite: 'none',
+    expires: new Date(0),
     path: '/',
   });
-  console.log(`[logoutUser] Cleared JWT cookie. NODE_ENV='${process.env.NODE_ENV}', Secure flag: ${isProduction}, SameSite: ${isProduction ? 'none' : 'lax'}`);
+  console.log(`[logoutUser] Cleared JWT cookie. NODE_ENV='${process.env.NODE_ENV}', Secure flag: true, SameSite: none`);
   res.status(200).json({ message: 'Logged out successfully' });
 });
 

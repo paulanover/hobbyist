@@ -99,6 +99,8 @@ const MatterListSection = ({ title, matters }) => {
 
 function ClientDetailPage() {
   const { id: clientId } = useParams();
+  // Retrieve current user info for access checks
+  const { userInfo } = useAuth();
   const [clientData, setClientData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
