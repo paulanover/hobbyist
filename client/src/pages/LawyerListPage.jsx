@@ -27,8 +27,10 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit'; // Import Edit icon
 import DeleteIcon from '@mui/icons-material/Delete'; // Import Delete icon
+import { useAuth } from '../context/AuthContext';
 
 function LawyerListPage() {
+  const { userInfo } = useAuth() || {};
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -49,6 +51,7 @@ function LawyerListPage() {
       setOpenDeleteDialog(false);
       setLawyerToDelete(null);
     } catch (err) {
+      console.error('Failed to delete lawyer:', err);
       setError('Failed to delete lawyer.');
     }
   };
@@ -197,15 +200,24 @@ function LawyerListPage() {
                         alignItems: { xs: 'flex-end', sm: 'center' },
                         justifyContent: 'flex-end'
                       }}>
-                        <Tooltip title="Edit Lawyer">
-                          <IconButton
-                            component={RouterLink}
-                            to={`/lawyers/edit/${lawyer._id}`}
-                            size="small"
-                          >
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
+                        {userInfo && (
+                          userInfo.role === 'admin'
+                          || (
+                            userInfo.role === 'lawyer'
+                            && ['Partner', 'Junior Partner'].includes(userInfo.lawyerProfile?.rank)
+                            && ['Associate', 'Senior Associate'].includes(lawyer.rank)
+                          )
+                        ) && (
+                          <Tooltip title="Edit Lawyer">
+                            <IconButton
+                              component={RouterLink}
+                              to={`/lawyers/edit/${lawyer._id}`}
+                              size="small"
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                         <Tooltip title="Delete Lawyer">
                           <IconButton
                             onClick={() => handleDelete(lawyer)}
